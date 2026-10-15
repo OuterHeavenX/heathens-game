@@ -746,7 +746,6 @@ div[class*="inset-x-[9%]"] > div.heathen-os-apps {
 
 /* Dusk grade over the 3D room: soft vignette + warm bloom, like the reference art. */
 .game-view { background: radial-gradient(ellipse at 50% 40%, #1d1722 0%, #0c0a10 70%); }
-.game-view canvas { filter: saturate(.94) contrast(1.06) brightness(1.03); }
 .game-view::after {
   content: "";
   position: absolute; inset: 0; pointer-events: none;
