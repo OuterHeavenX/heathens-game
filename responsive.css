@@ -7,6 +7,259 @@
   overflow: hidden;
 }
 
+/* HeathenOS — shared interface system */
+:root {
+  --hos-bg: #0b0910;
+  --hos-panel: #15121b;
+  --hos-panel-2: #1d1923;
+  --hos-line: rgba(255, 255, 255, 0.1);
+  --hos-text: #f8f3ee;
+  --hos-muted: #aaa3b2;
+  --hos-coral: #ff6847;
+  --hos-coral-dark: #b83c2a;
+  --hos-cyan: #35c8d7;
+  --hos-green: #2fc98f;
+  --hos-violet: #a784e8;
+  --hos-radius: 18px;
+  --hos-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+
+.game-hud-profile,
+.game-hud-actions > div,
+.game-hud-needs > div {
+  background: rgba(20, 17, 25, 0.94) !important;
+  border-color: var(--hos-line) !important;
+  color: var(--hos-text) !important;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.34) !important;
+}
+
+.game-hud-profile,
+.game-hud-needs > div { border-radius: var(--hos-radius) !important; }
+.game-hud-actions button {
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 13px !important;
+  border: 1px solid var(--hos-line) !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28) !important;
+}
+.game-hud-actions button[class*="bg-amber"] { background: var(--hos-coral) !important; }
+.game-hud-actions button[class*="bg-emerald"] { background: var(--hos-green) !important; }
+.game-hud-actions button[class*="bg-violet"] { background: var(--hos-violet) !important; }
+.game-hud-actions button[class*="bg-orange"] { background: var(--hos-cyan) !important; }
+.game-hud-needs > button {
+  background: var(--hos-panel) !important;
+  border-color: var(--hos-line) !important;
+  color: var(--hos-muted) !important;
+  min-height: 34px;
+}
+
+/* The former device mockup becomes one roomy, responsive software surface. */
+div[class*="absolute inset-0 z-40 flex items-center justify-center"][class*="backdrop-blur"] {
+  position: fixed !important;
+  padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)) !important;
+  background: rgba(5, 4, 8, 0.78) !important;
+  backdrop-filter: blur(14px) saturate(0.8) !important;
+}
+
+div[class*="h-[92%]"][class*="max-h-[760px]"][class*="w-72"] {
+  width: min(100%, 470px) !important;
+  height: min(100%, 820px) !important;
+  max-height: none !important;
+  align-items: stretch !important;
+  overflow: hidden !important;
+  border: 1px solid var(--hos-line) !important;
+  border-radius: 26px !important;
+  background: var(--hos-bg) !important;
+  box-shadow: var(--hos-shadow) !important;
+}
+div[class*="h-[92%]"][class*="max-h-[760px]"][class*="w-72"] > img { display: none !important; }
+div[class*="h-[92%]"][class*="max-h-[760px]"][class*="w-72"] > div[class*="inset-x-[9%]"] {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 18px 16px 12px !important;
+  border-radius: 0 !important;
+  background: var(--hos-bg) !important;
+  color: var(--hos-text) !important;
+}
+div[class*="h-[92%]"][class*="max-h-[760px]"][class*="w-72"] > button[aria-label="Close phone"] {
+  top: 12px !important;
+  right: 12px !important;
+  width: 44px !important;
+  height: 44px !important;
+  border: 1px solid var(--hos-line) !important;
+  background: var(--hos-panel-2) !important;
+  color: var(--hos-text) !important;
+  z-index: 30 !important;
+}
+
+/* Phone header, app launcher, and section bar */
+div[class*="inset-x-[9%]"] > div:first-child {
+  min-height: 44px;
+  padding: 5px 52px 10px 2px !important;
+  border-bottom: 1px solid var(--hos-line);
+  color: var(--hos-muted) !important;
+  font-size: 11px !important;
+}
+div[class*="inset-x-[9%]"] > div[class*="grid-cols-3"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 16px 8px !important;
+  margin-top: 18px !important;
+  padding: 0 2px !important;
+}
+div[class*="inset-x-[9%]"] > div[class*="grid-cols-3"] button { min-height: 74px; }
+div[class*="inset-x-[9%]"] > div[class*="grid-cols-3"] button > span:first-child {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35) !important;
+}
+div[class*="inset-x-[9%]"] > div[class*="grid-cols-3"] button > span:last-child {
+  font-size: 11px !important;
+  color: var(--hos-text) !important;
+}
+div[class*="inset-x-[9%]"] > div[class*="mb-1 flex items-center gap-1.5"] {
+  min-height: 48px;
+  margin: 0 -2px 8px !important;
+  padding-right: 48px;
+  border-bottom: 1px solid var(--hos-line);
+}
+div[class*="inset-x-[9%]"] > div[class*="mb-1 flex items-center gap-1.5"] button {
+  min-height: 36px;
+  padding: 0 12px !important;
+  background: var(--hos-panel-2) !important;
+  color: var(--hos-text) !important;
+}
+div[class*="inset-x-[9%]"] > div[class*="mb-1 flex items-center gap-1.5"] span {
+  font-size: 15px !important;
+  color: var(--hos-text) !important;
+}
+
+/* Job board */
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] {
+  margin: 0 -4px !important;
+  padding: 4px 4px 74px !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.22) transparent;
+}
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > div:first-child {
+  padding: 15px 14px !important;
+  border-radius: 16px !important;
+  background: var(--hos-coral) !important;
+  text-align: left !important;
+}
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > div:first-child div:first-child {
+  font-size: 15px !important;
+  color: #160c0a !important;
+}
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > div:first-child div:last-child {
+  margin-top: 2px;
+  font-size: 10px !important;
+  color: rgba(22,12,10,.72) !important;
+}
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button {
+  padding: 14px !important;
+  border: 1px solid var(--hos-line) !important;
+  border-radius: 16px !important;
+  background: var(--hos-panel) !important;
+  color: var(--hos-text) !important;
+}
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button > div:first-child span:first-child { font-size: 26px !important; }
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button span[class*="text-[12px]"] { font-size: 15px !important; }
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button div[class*="text-[10px]"] { font-size: 12px !important; color: var(--hos-muted); }
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button span[class*="bg-amber"] { background: var(--hos-coral) !important; }
+
+/* Life is a first-class HeathenOS screen, not a loose floating brown sheet. */
+button[class*="fixed bottom-24 right-3"] {
+  right: 14px !important;
+  bottom: calc(142px + env(safe-area-inset-bottom)) !important;
+  min-width: 48px;
+  min-height: 44px;
+  padding: 0 14px !important;
+  border: 1px solid rgba(255,255,255,.16) !important;
+  border-radius: 14px !important;
+  background: var(--hos-violet) !important;
+  color: #160f1d !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,.4) !important;
+}
+div[class*="fixed inset-0 z-50 flex items-end justify-center bg-black/50"] {
+  align-items: center !important;
+  padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)) !important;
+  background: rgba(5, 4, 8, 0.78) !important;
+  backdrop-filter: blur(14px) saturate(.8);
+}
+div[class*="fixed inset-0 z-50 flex items-end justify-center bg-black/50"] > div {
+  width: min(100%, 470px) !important;
+  height: min(100%, 820px) !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 20px 18px 86px !important;
+  border: 1px solid var(--hos-line) !important;
+  border-radius: 26px !important;
+  background: var(--hos-bg) !important;
+  color: var(--hos-text) !important;
+  box-shadow: var(--hos-shadow) !important;
+}
+div[class*="fixed inset-0 z-50 flex items-end justify-center bg-black/50"] h3 {
+  font-size: 20px !important;
+  letter-spacing: -.02em;
+}
+div[class*="fixed inset-0 z-50 flex items-end justify-center bg-black/50"] h3 + button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--hos-line);
+  border-radius: 14px;
+  background: var(--hos-panel-2);
+  color: var(--hos-text) !important;
+}
+div[class*="fixed inset-0 z-50 flex items-end justify-center bg-black/50"] div[class*="grid-cols-2"] > button {
+  min-height: 50px;
+  padding: 8px 10px !important;
+  border: 1px solid var(--hos-line);
+  background: var(--hos-panel-2) !important;
+  color: var(--hos-text);
+  font-size: 12px !important;
+  text-align: left;
+}
+div[class*="fixed inset-0 z-50 flex items-end justify-center bg-black/50"] div[class*="space-y-1"] > div {
+  padding: 10px 12px !important;
+  border: 1px solid var(--hos-line);
+  border-radius: 12px !important;
+  background: var(--hos-panel) !important;
+  font-size: 12px !important;
+}
+
+@media (max-width: 639px) {
+  .game-hud { padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)) !important; }
+  .game-hud-top { gap: 8px !important; }
+  .game-hud-profile { max-width: 49%; padding: 10px !important; }
+  .game-hud-actions { max-width: 49%; gap: 6px !important; }
+  .game-hud-actions > div { min-height: 38px; padding: 0 10px !important; }
+  .game-hud-actions button { padding: 0 10px !important; }
+  .game-hud-actions button span + span { display: none; }
+  .game-hud-needs { max-width: none !important; }
+  .game-hud-needs > div { padding: 12px 14px !important; }
+
+  div[class*="h-[92%]"][class*="max-h-[760px]"][class*="w-72"],
+  div[class*="fixed inset-0 z-50 flex items-end justify-center bg-black/50"] > div {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 20px !important;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  div[class*="h-[92%]"][class*="max-h-[760px]"][class*="w-72"],
+  div[class*="fixed inset-0 z-50 flex items-end justify-center bg-black/50"] > div {
+    width: min(100%, 760px) !important;
+    height: 100% !important;
+    max-width: 760px !important;
+  }
+  div[class*="inset-x-[9%]"] > div[class*="grid-cols-3"] { grid-template-columns: repeat(8, minmax(0, 1fr)) !important; }
+  button[class*="fixed bottom-24 right-3"] { bottom: 96px !important; }
+}
+
 .game-view {
   position: absolute;
   inset: 0;
