@@ -1,0 +1,102 @@
+.app-shell {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.game-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  background: #0c0a09;
+}
+
+.game-view canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.game-hud {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+  padding-right: max(0.75rem, env(safe-area-inset-right));
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  padding-left: max(0.75rem, env(safe-area-inset-left));
+}
+
+@media (max-width: 639px) {
+  .game-hud-top {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .game-hud-profile {
+    max-width: min(78vw, 19rem);
+    padding: 0.55rem;
+  }
+
+  .game-hud-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.3rem;
+  }
+
+  .game-hud-actions > div,
+  .game-hud-actions > button {
+    min-height: 2.25rem;
+  }
+
+  .game-hud-needs {
+    max-width: calc(100vw - 1.25rem);
+  }
+
+  .npc-social-menu {
+    left: max(0.75rem, env(safe-area-inset-left)) !important;
+    right: max(0.75rem, env(safe-area-inset-right)) !important;
+    top: auto !important;
+    bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+    width: auto !important;
+    max-height: min(76dvh, 38rem) !important;
+    transform-origin: bottom center;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .game-hud {
+    padding: 0.45rem;
+  }
+
+  .game-hud-top {
+    gap: 0.35rem;
+  }
+
+  .game-hud-profile {
+    padding: 0.45rem;
+    transform: scale(0.9);
+    transform-origin: top left;
+  }
+
+  .game-hud-actions {
+    gap: 0.25rem;
+    transform: scale(0.9);
+    transform-origin: top right;
+  }
+
+  .game-hud-needs {
+    max-width: 32rem;
+    transform: scale(0.9);
+    transform-origin: bottom center;
+  }
+
+  .npc-social-menu {
+    top: 0.5rem !important;
+    bottom: 0.5rem !important;
+    max-height: none !important;
+  }
+}
