@@ -2,7 +2,14 @@
 
 Browser-based 3D life sim.
 
-## Life & Relationships (💕 button, bottom-right)
+## Command Deck (📱 Phone button)
+
+- **Phone tab** — open the full phone apps (Messages, Friends, Real Estate, Map…) and start City Job Board shifts.
+- **Life & Relationships tab** — manage your household (text, gift, apologize, send to work, marry/divorce), invite dating-app matches over, run relationship actions, buy toys and see achievements.
+- Tap a **need bar** (Hunger, Energy, Hygiene, Fun, Comfort, The Voices) to send your Heathen to do something about it.
+- Spouses and roommates live in your home, wander around it and are saved with your game.
+
+## Life & Relationships
 
 - **Dating app** — Match new people
 - **Text partner** — Flirty/normal/mean effects on affinity & jealousy
@@ -20,3 +27,13 @@ Roommates (persistent), personality jobs, shared bills, jealousy, pregnancy→ba
 All saved locally.
 
 Mature content: crime, drugs, violence, explicit.
+
+## Development
+
+```bash
+npm install
+npm run dev      # local dev server
+npm run build    # production build (what GitHub Pages deploys)
+```
+
+All static files (textures, music, avatars, the dusk window) live in `public/assets` so they are copied into the build.
