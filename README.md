@@ -29,22 +29,24 @@ The game is primarily mouse/touch driven. Use the on-screen controls to move, in
 
 Progress is saved in your browser's local storage.
 
-## Visitor Interactions
+## Visitors & Roommates
 
-When you invite guests over to your place, tap them for more options:
+**While a guest is visiting**, tap them for:
 
-- 😂 Laugh
-- 💬 Talk
-- 🃏 Joke
-- 🤡 Play the fool
-- 🎤 Sing together
-- 😘 Cheek kiss
-- 💋 Make out
-- 🛏️ Have sex
-- 🏠 Invite to move in
+- 😂 Laugh / 💬 Talk / 🃏 Joke / 🤡 Play the fool / 🎤 Sing
+- 😘 Cheek kiss / 💋 Make out / 🛏️ Have sex
+- 🏠 Invite to move in (needs affinity ~35+)
 - 🚪 Send Home
 
-Actions boost fun/happiness and build affinity. High affinity + invite to move in has special flavor.
+**Once they move in** (persistent, saved across sessions):
+
+- Same social options anytime they're home
+- 💼 Send to work — they leave for a while and return with wages that go straight to your money
+- 💍 Propose / Marry (needs higher affinity ~60+)
+- 💔 Divorce
+- 📦 Ask to move out
+
+Roommates stay in your apartment, are saved in localStorage, and reappear when you reload. Work timers and marriage status persist.
 
 ## Content note
 
