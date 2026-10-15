@@ -353,3 +353,235 @@ div[class*="fixed inset-0 z-50 flex items-end justify-center bg-black/50"] div[c
     max-height: none !important;
   }
 }
+
+/* Reference-match pass: persistent profile, launcher, content and nav. */
+button[class*="fixed bottom-24 right-3"] { display: none !important; }
+
+div[class*="h-[92%]"][class*="max-h-[760px]"][class*="w-72"] {
+  width: min(calc(100% - 28px), 540px) !important;
+  height: min(calc(100% - 24px), 900px) !important;
+  border-radius: 28px !important;
+  border-color: rgba(167, 132, 232, .26) !important;
+  background: #0f0b15 !important;
+  box-shadow: 0 28px 90px rgba(0,0,0,.66), inset 0 1px rgba(255,255,255,.05) !important;
+}
+
+div[class*="h-[92%]"][class*="max-h-[760px]"][class*="w-72"] > div[class*="inset-x-[9%]"] {
+  padding: 14px 14px 0 !important;
+  background: #0f0b15 !important;
+}
+
+.heathen-os-profile {
+  flex: 0 0 auto;
+  min-height: 82px !important;
+  padding: 10px 56px 10px 10px !important;
+  border: 1px solid rgba(255,255,255,.09) !important;
+  border-radius: 20px !important;
+  background: #17111e !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.04);
+}
+.heathen-os-identity { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.heathen-os-avatar {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  place-items: center;
+  border: 1px solid rgba(53,200,215,.55);
+  border-radius: 16px;
+  background: #202033;
+  font-size: 28px;
+}
+.heathen-os-identity strong { display: block; color: #fff; font-size: 19px; line-height: 1.1; }
+.heathen-os-identity small { display: block; margin-top: 7px; color: #a9a0b2; font-size: 10px; white-space: nowrap; }
+.heathen-os-wallet {
+  display: grid;
+  gap: 5px;
+  min-width: 82px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  background: #100c16;
+  color: #ffd26a;
+  font-size: 11px;
+}
+.heathen-os-wallet span:last-child { color: #f4a7d4; }
+
+div[class*="inset-x-[9%]"] > .heathen-os-apps {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  flex: 0 0 auto;
+  gap: 7px !important;
+  margin: 10px 0 12px !important;
+  padding: 0 !important;
+}
+.heathen-os-apps button {
+  min-width: 0;
+  min-height: 76px !important;
+  gap: 4px !important;
+  padding: 7px 2px 6px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  background: #1a1520;
+}
+.heathen-os-apps button:first-child {
+  border-color: #ff8a45;
+  background: #3a1b18;
+  box-shadow: 0 0 0 1px rgba(255,104,71,.32), 0 0 22px rgba(255,104,71,.16);
+}
+div[class*="inset-x-[9%]"] > .heathen-os-apps button > span:first-child {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  --tw-ring-color: transparent !important;
+  font-size: 24px !important;
+}
+.heathen-os-apps button > span:last-child { font-size: 9px !important; }
+
+div[class*="inset-x-[9%]"] > div[class*="mb-1 flex items-center gap-1.5"] {
+  min-height: 70px;
+  margin: 0 !important;
+  padding: 11px 8px 9px !important;
+  border: 1px solid rgba(255,255,255,.08);
+  border-bottom: 0;
+  border-radius: 18px 18px 0 0;
+  background: #15101a;
+}
+div[class*="inset-x-[9%]"] > div[class*="mb-1 flex items-center gap-1.5"] button { display: none; }
+div[class*="inset-x-[9%]"] > div[class*="mb-1 flex items-center gap-1.5"] span {
+  font-size: 24px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.025em;
+}
+div[class*="inset-x-[9%]"] > div[class*="mb-1 flex items-center gap-1.5"]::after {
+  content: "Take on shifts around the city, build your skills, and get promoted for better pay.";
+  position: absolute;
+  margin: 38px 0 0 3px;
+  color: #9991a2;
+  font-size: 10px;
+}
+
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] {
+  margin: 0 !important;
+  padding: 0 7px 88px !important;
+  border: 1px solid rgba(255,255,255,.08);
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+  background: #15101a;
+}
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > div:first-child { display: none !important; }
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 5px 10px;
+  margin-top: 8px;
+  padding: 11px !important;
+  border-color: rgba(255,255,255,.11) !important;
+  border-radius: 16px !important;
+  background: #17121d !important;
+}
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button:first-of-type {
+  border-color: #ff7c40 !important;
+  box-shadow: inset 0 0 0 1px rgba(255,124,64,.18), 0 8px 22px rgba(0,0,0,.24);
+}
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button > div:first-child { grid-column: 1; grid-row: 1; }
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button > div:nth-child(2) {
+  grid-column: 1;
+  grid-row: 2;
+  margin: 0 0 0 34px !important;
+}
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button > div:nth-child(3) {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  display: grid !important;
+  justify-items: end;
+  border: 0 !important;
+  padding: 0 !important;
+}
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button > div:nth-child(3) span:last-child {
+  padding: 8px 11px !important;
+  border-radius: 12px !important;
+  background: #ff773d !important;
+  font-size: 12px !important;
+}
+div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button > div:nth-child(4) { grid-column: 1 / -1; grid-row: 3; }
+
+.heathen-os-bottom-nav {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  min-height: 70px;
+  padding: 7px 8px max(7px, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(167,132,232,.28);
+  background: rgba(19,14,25,.98);
+  box-shadow: 0 -12px 30px rgba(0,0,0,.28);
+}
+.heathen-os-bottom-nav button {
+  min-height: 54px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: #b9b0c2;
+  font-size: 10px;
+  font-weight: 800;
+}
+.heathen-os-bottom-nav button.active {
+  border-color: #ff8a45;
+  background: #3a1b18;
+  color: #ffaf68;
+  box-shadow: 0 0 18px rgba(255,104,71,.2);
+}
+
+@media (max-width: 430px) {
+  .heathen-os-profile { min-height: 76px !important; padding-left: 8px !important; }
+  .heathen-os-avatar { width: 46px; height: 46px; flex-basis: 46px; font-size: 23px; }
+  .heathen-os-identity strong { font-size: 16px; }
+  .heathen-os-wallet { display: none; }
+  .heathen-os-apps button { min-height: 66px !important; }
+  div[class*="inset-x-[9%]"] > .heathen-os-apps button > span:first-child { width: 32px !important; height: 32px !important; font-size: 20px !important; }
+  div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button { grid-template-columns: minmax(0,1fr) 82px; }
+}
+
+/* Final measured corrections against the 590 × 1280 reference. */
+div[class*="h-[92%]"][class*="max-h-[760px]"][class*="w-72"] {
+  height: calc(100% - 48px) !important;
+  max-height: 1180px !important;
+}
+div[class*="inset-x-[9%]"] > div.heathen-os-apps {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+.heathen-os-avatar { font-size: 0 !important; }
+.heathen-os-avatar::after { content: "🧑‍🦰"; font-size: 29px; }
+
+@media (max-width: 430px) {
+  div[class*="h-[92%]"][class*="max-h-[760px]"][class*="w-72"] {
+    height: calc(100% - 16px) !important;
+    max-height: none !important;
+  }
+  div[class*="inset-x-[9%]"] > div.heathen-os-apps {
+    gap: 5px !important;
+  }
+  .heathen-os-apps button { padding-inline: 0; }
+  .heathen-os-apps button > span:last-child { font-size: 8px !important; }
+  div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button span[class~="text-[12px]"] {
+    font-size: 16px !important;
+    line-height: 1.18 !important;
+  }
+  div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button > div:first-child {
+    gap: 7px !important;
+  }
+  div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button > div:first-child > span:nth-child(2) > span:first-child {
+    font-size: 16px !important;
+    line-height: 1.18 !important;
+  }
+  div[class*="mt-1.5 flex-1 space-y-2 overflow-y-auto"] > button > div:nth-child(2) {
+    margin-left: 33px !important;
+    font-size: 10px !important;
+  }
+}
