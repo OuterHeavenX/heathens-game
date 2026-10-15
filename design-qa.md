@@ -1,25 +1,25 @@
-# HeathenOS UI Design QA
+# Design 3 UI and Room Rendering QA
 
-- Source visual: `C:\Users\jimmy\.codex\codex-remote-attachments\01a13d5d-11fe-7023-9ea1-e9681c5e9ea8\2090E3F0-95B0-4B5B-917A-E5F495064715\2-Photo-2.jpg`
-- Implementation evidence: live local browser capture at `http://127.0.0.1:4173/`
-- Compared state: Phone → Jobs
-- Compared viewports: 590 × 1280 reference scale and 390 × 844 iPhone layout
+- UI reference: `67D7C088-452C-41D1-BDF7-1F09C4C44847/1-Pasted-Image-1.jpg`
+- Room reference: `67D7C088-452C-41D1-BDF7-1F09C4C44847/2-Pasted-Image-2.jpg`
+- Implementation evidence: live local browser at `http://127.0.0.1:4173/`
+- Tested viewport: 390 × 844 portrait
 
-## Comparison history
+## Implemented comparison points
 
-1. The first shipped pass was rejected because it only restyled the existing narrow phone instead of reproducing the selected hierarchy.
-2. Rebuilt the Phone screen around four persistent zones: player/profile header, two-row five-column app launcher, current app content, and bottom navigation.
-3. Reworked Jobs into horizontal cards with orange pay actions, compact descriptions, promotion meters, and a selected orange outline.
-4. Matched the reference's dark plum surfaces, fine violet borders, rounded corners, orange active state, blurred game backdrop, and inset full-height composition.
-5. Narrow-screen review caught oversized job titles; the 390 px layout now uses 16 px titles and preserves the pay column without clipping.
-6. Verified the Life app tile opens the functional Life & Relationships screen.
+1. Phone now opens one integrated Command Deck instead of the previous standalone phone shell.
+2. The deck uses the reference hierarchy: title, Phone/Life tabs, relationship actions and furniture on the left, and a compact City Job Board on the right.
+3. Room framing was tightened specifically for portrait viewports so the environment occupies the center of the screen instead of appearing as a small distant island.
+4. Added a custom dusk-city window scene, warm key/fill lights, cool window rim light, tone mapping, higher-quality shadows, and a more responsive floor material.
+5. Kept action controls functional: relationship actions still call the game simulation and job cards still start real shifts with the existing pay/progression logic.
 
 ## Final findings
 
 - P0: none
 - P1: none
 - P2: none
-- Browser console warnings/errors: none
+- Browser console errors: none
 - Production build: passed
-- Interaction check: Jobs navigation passed; Life navigation passed
-- final result: passed
+- Interaction check: Phone → Command Deck passed
+- Portrait room framing: passed
+- Final result: passed
