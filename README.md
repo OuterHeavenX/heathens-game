@@ -1,23 +1,22 @@
 # Heathens
 
-A browser-based 3D life simulation game.
+Browser-based 3D life sim.
 
-## Visitors & Roommates (full relationship system)
+## Life & Relationships (💕 button, bottom-right)
 
-**Guests:** laugh, talk, joke, fool, sing, cheek kiss, make out, strip/dance, sex (5 positions), invite to move in, threesome (if roommate home), record (evil mode), send home.
+- **Dating app** — Match new people
+- **Text partner** — Flirty/normal/mean effects on affinity & jealousy
+- **Post social** — Earn money; suspicious posts raise heat (especially evil)
+- **Accomplice job** — Loyal roommate helps with crime for big cash + heat
+- **Bribe heat** — Pay to reduce police heat
+- **Cook together / Workout** — Boost needs & affinity
+- **Arcade bet** — Wager $30
+- **Toys** — Buy mirror / restraints / camera (bonuses to sex; camera fits evil recording flavor)
+- **Overview** — See roommates, affinity, marriage, pregnancy, jealousy, heat, reputation, achievements
 
-**Roommates (persistent):**
-- Personality jobs (Maya = Model/Influencer variable pay, Leo = Trainer steady, others odd jobs)
-- Send to work → they return with wages (variance based on job)
-- Shared rent & bills — they contribute; miss payments and affinity drops / they get upset
-- Jealousy when you mess around with others (worse if married)
-- Arguments: low affinity / high jealousy blocks some actions; apologize or gift to recover; makeup sex helps
-- Morning/night-style routines (shower, eat, TV, nap…) — join them
-- Pregnancy chance after sex (high affinity); progresses to baby (extra costs flavor)
-- Marriage / divorce / move out
-- Strip, record (evil), full sex positions with stamina
+## Already included
+Roommates (persistent), personality jobs, shared bills, jealousy, pregnancy→baby, routines, arguments (apologize/gift), sex positions, strip, threesome, record (evil), street work (via Life panel or future menu), marriage.
 
-All saved in localStorage.
+All saved locally.
 
-## Content note
-Mature themes: crime, drugs, violence, explicit adult content.
+Mature content: crime, drugs, violence, explicit.
