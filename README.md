@@ -12,25 +12,28 @@ Browser-based 3D life sim.
 ## Economy
 
 - **Jobs** pay more per second the harder they are (easy ≈ $2/s, hard ≈ $3.4/s once you count recovery). Desk freelancing is a small side gig ($14–25).
-- **Bills** come every 2 minutes: rent (studio $80, warehouse $110, 2-bedroom $160), utilities that grow with your furniture, and groceries for everyone at home (plus baby costs). Roommates chip in. Missing 3 bills makes an unmarried roommate move out.
+- **Bills** come every 2 minutes of game time: rent (studio $80, warehouse $110, 2-bedroom $160), utilities that grow with your furniture, and groceries for everyone in the household (plus baby costs). Every roommate chips in a share of their wage, whether or not they're at work right now.
+- **Unpaid bills** — if you can't cover a bill you pay what you can and the rest becomes debt, which is taken from any cash you earn until it's cleared. Missing 3 bills makes an unmarried roommate move out; with nobody to blame, the eviction stress hits your happiness and comfort instead.
 - **Roommates** rest for 2 minutes after a shift before they can work again.
+- **Arcade** — each play costs a $5 token and each run pays up to $40.
+- **Cooldowns** (posting, accomplice jobs, recording, texting) run on game time and are saved with your game.
 
 ## Life & Relationships
 
 - **Dating app** — Match new people
 - **Text partner** — Flirty/normal/mean effects on affinity & jealousy
-- **Post social** — Earn money; suspicious posts raise heat (especially evil)
+- **Post social** — Earn money; in Evil Mode a suspicious post pays extra but raises heat
 - **Accomplice job** — Loyal roommate helps with crime for big cash + heat
 - **Bribe heat** — Pay to reduce police heat
 - **Cook together / Workout** — Boost needs & affinity
 - **Arcade bet** — Wager $30
-- **Toys** — Buy mirror / restraints / camera (bonuses to sex; camera fits evil recording flavor)
+- **Toys** — Buy mirror / restraints / camera (mirror and restraints boost sex with anyone; the camera makes recordings sell for more)
 - **Overview** — See roommates, affinity, marriage, pregnancy, jealousy, heat, reputation, achievements
 
 ## Already included
 Roommates (persistent), personality jobs, shared bills, jealousy, pregnancy→baby, routines, arguments (apologize/gift), sex positions, strip, threesome, record (evil), street work (via Life panel or future menu), marriage.
 
-All saved locally.
+All saved locally. Volume and game speed can be changed in the ⏸️ pause menu.
 
 Mature content: crime, drugs, violence, explicit.
 

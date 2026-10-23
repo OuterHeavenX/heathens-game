@@ -55,7 +55,6 @@ var l = {
   AUDIO_CTFN: `./assets/4b4f718534e54d19b3e103c474151347.mp3`,
   IMAGE_XYXF: `./assets/454ee6dfe3e64700a9d2109461e6685e.png`,
   IMAGE_KSFU: `./assets/ca3d7eb8ca8a48a8bf2801b18ad15f17.png`,
-  IMAGE_AKQM: `./assets/3330b347f8f14c8ea72210750dece82e.jpg`,
   IMAGE_JITE: `./assets/613c2ffb308e4666a295bf67724630e3.png`,
   IMAGE_GFDX: `./assets/520cd1f13f4c41afa0da66b9ddcc3b3a.png`,
   IMAGE_CLVW: `./assets/17171b29190647349e7f0f8debd124b0.png`,
@@ -65,8 +64,6 @@ var l = {
   IMAGE_ZEWD: `./assets/3bef5099f5bb4485b6ff1ac4f7dbb3fb.jpg`,
   IMAGE_RDYJ: `./assets/10fb70de015848e4a7464a263598259e.png`,
   IMAGE_MLFJ: `./assets/223bb2ccb34f414fbf383f5181d7dc9a.png`,
-  IMAGE_TDRZ: `./assets/a6bfd6f538eb4377847fd7890a196cdd.png`,
-  IMAGE_BFJL: `./assets/29417b0197d54ebaa5172d38882b717d.png`,
   IMAGE_NXKH: `./assets/b98d121645d64e57a1125dd2049c8d2c.png`,
   IMAGE_VFYY: `./assets/f192d8fe3aba4520815caaeef996d5ea.png`,
 };
@@ -501,18 +498,14 @@ var u = l,
   h = c(f(), 1),
   g = m();
 function _({ menu: e, onRotate: t, onDelete: n, onClose: r }) {
-  let [i, a] = (0, h.useState)(!1);
+  let [i, a] = (0, h.useState)(!1),
+    [cf, setCf] = (0, h.useState)(!1);
   if (
     ((0, h.useEffect)(() => {
-      a(!1);
+      (a(!1), setCf(!1));
       let e = requestAnimationFrame(() => a(!0));
       return () => cancelAnimationFrame(e);
     }, [e?.wallId]),
-    (0, h.useEffect)(() => {
-      if (!e) return;
-      let t = () => r();
-      return (window.addEventListener(`pointerdown`, t), () => window.removeEventListener(`pointerdown`, t));
-    }, [e, r]),
     !e)
   )
     return null;
@@ -520,7 +513,10 @@ function _({ menu: e, onRotate: t, onDelete: n, onClose: r }) {
     s = Math.max(90, Math.min(window.innerHeight - 90, e.y));
   return (0, g.jsxs)(`div`, {
     className: `fixed inset-0 z-40`,
-    onPointerDown: (e) => e.stopPropagation(),
+    // Tapping the empty backdrop closes the menu.
+    onPointerDown: (e) => {
+      (e.stopPropagation(), e.target === e.currentTarget && r());
+    },
     children: [
       (0, g.jsx)(`div`, {
         "aria-hidden": !0,
@@ -554,7 +550,8 @@ function _({ menu: e, onRotate: t, onDelete: n, onClose: r }) {
       }),
       (0, g.jsxs)(`button`, {
         type: `button`,
-        onClick: n,
+        // Deleting a wall can't be undone, so ask for a second tap.
+        onClick: () => (cf ? n() : setCf(!0)),
         className: `absolute flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-rose-400/80 bg-stone-900/95 text-[9px] font-bold text-rose-100 shadow-2xl active:scale-90`,
         style: {
           left: o - 74,
@@ -562,7 +559,7 @@ function _({ menu: e, onRotate: t, onDelete: n, onClose: r }) {
           transform: `translate(-50%, -50%) scale(${i ? 1 : 0.3})`,
           transition: `transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1)`,
         },
-        children: [(0, g.jsx)(`span`, { className: `text-lg leading-none`, children: `🗑️` }), `Delete`],
+        children: [(0, g.jsx)(`span`, { className: `text-lg leading-none`, children: `🗑️` }), cf ? `Sure?` : `Delete`],
       }),
       (0, g.jsxs)(`button`, {
         type: `button`,
@@ -22513,7 +22510,9 @@ function Vl(e) {
     c = !1,
     l = !1,
     u = null,
-    d = 0;
+    d = 0,
+    // While paused/hidden the scene is static, so redraw at a low rate instead of every frame.
+    pr = 0;
   function f() {
     ((u = null), (d = 0));
   }
@@ -22523,7 +22522,9 @@ function Vl(e) {
   function m() {
     if (o) return;
     if (!p()) {
-      (f(), e.render?.());
+      f();
+      let t = performance.now();
+      t - pr >= 250 && ((pr = t), e.render?.());
       return;
     }
     let a = i.now();
@@ -22573,7 +22574,11 @@ function Hl(e, t) {
     for (let e of a) e && !t.has(e) && r.add(e);
   }),
     n.forEach((e) => e.dispose()),
-    r.forEach((e) => e.dispose()),
+    r.forEach((e) => {
+      // Free textures too (shared ones are re-uploaded automatically if used again).
+      for (let n of Object.values(e)) n && n.isTexture && !t.has(n) && n.dispose();
+      e.dispose();
+    }),
     e.clear());
 }
 var Ul = `WebGL failed to start. Refresh the page to try again.`;
@@ -22681,7 +22686,16 @@ function ql() {
   };
 }
 var Jl = u.IMAGE_GFDX;
+// Room textures are identical across rooms and rebuilds, so build/load each one once.
+var roomTexCache = new Map();
+function cachedRoomTex(e, t) {
+  let n = roomTexCache.get(e);
+  return (n === void 0 && ((n = t()), roomTexCache.set(e, n)), n);
+}
 function Yl(e) {
+  return cachedRoomTex(`floor:` + e, () => buildFloorTex(e));
+}
+function buildFloorTex(e) {
   let t = document.createElement(`canvas`);
   ((t.width = 256), (t.height = 256));
   let n = t.getContext(`2d`);
@@ -22760,15 +22774,31 @@ function Xl(e, t = `studio`) {
           ((q.x = t + dx * co + dz * si), (q.z = n - dx * si + dz * co));
         }
   }
+  // Removed props are kept (not disposed) so loading an older save can put them back.
+  let removedProps = new Map();
   function d(e) {
     a.add(e);
     let t = i.findIndex((t) => t.id === e);
     if (t < 0) return;
-    let n = i[t];
-    (n.obj.parent?.remove(n.obj), i.splice(t, 1));
+    let n = i[t],
+      l = n.obj.parent;
+    (l?.remove(n.obj), i.splice(t, 1));
     let s = o.get(e);
+    (removedProps.set(e, { entry: n, parent: l, colliders: s ? s.map((e) => [e, r[e]?.r ?? 0]) : [] }),
+      s && o.delete(e));
     if (s) for (let e of s) r[e] && (r[e].r = 0);
-    o.delete(e);
+  }
+  function restoreProp(e) {
+    let t = removedProps.get(e);
+    if (!t) return;
+    (removedProps.delete(e), a.delete(e), t.parent?.add(t.entry.obj), i.push(t.entry));
+    if (t.colliders.length) {
+      for (let [e, n] of t.colliders) r[e] && (r[e].r = n);
+      o.set(
+        e,
+        t.colliders.map(([e]) => e),
+      );
+    }
   }
   function f(e, t, n, i, a) {
     let o = Math.hypot(n - e, i - t),
@@ -22783,6 +22813,7 @@ function Xl(e, t = `studio`) {
     m = 0,
     h = new Set(),
     g = new Map();
+  const wallSegs = p;
   function _(e) {
     let t = g.get(e.id),
       n = Math.max(1, Math.ceil(e.len / 0.55));
@@ -22830,14 +22861,13 @@ function Xl(e, t = `studio`) {
       (r.trim.position.z = r.seg.position.z),
       _(r));
   }
+  // Deleted walls are kept (not disposed) so loading an older save can put them back.
+  let removedWalls = new Map();
   function S(e) {
     let t = p.findIndex((t) => t.id === e);
     if (t < 0) return !1;
     let n = p[t];
-    (n.seg.parent?.remove(n.seg),
-      n.trim.parent?.remove(n.trim),
-      n.seg.geometry.dispose(),
-      n.trim.geometry.dispose());
+    (n.seg.parent?.remove(n.seg), n.trim.parent?.remove(n.trim), removedWalls.set(n.id, n));
     let i = g.get(n.id);
     if (i) {
       for (let e of i) r[e] && (r[e].r = 0);
@@ -22876,6 +22906,8 @@ function Xl(e, t = `studio`) {
         S(t.id);
         continue;
       }
+      let r = removedWalls.get(t.id);
+      r && (removedWalls.delete(t.id), h.delete(t.id), n.add(r.seg, r.trim), p.push(r), _(r));
       let e = p.find((e) => e.id === t.id);
       e && (e.axis !== t.axis && C(t.id), x(t.id, t.x, t.z));
     }
@@ -22899,6 +22931,9 @@ function Xl(e, t = `studio`) {
       l(i, `Cozy Bed`, `🛏️`, 220, 0.95));
   }
   function procTex(w, h, draw, rx, ry) {
+    return cachedRoomTex(`proc:${w}x${h}:${rx}:${ry}:` + draw.toString(), () => buildProcTex(w, h, draw, rx, ry));
+  }
+  function buildProcTex(w, h, draw, rx, ry) {
     const cv = document.createElement(`canvas`);
     cv.width = w;
     cv.height = h;
@@ -23010,9 +23045,11 @@ function Xl(e, t = `studio`) {
     x.arc(w * 0.86 + 1.5, h * 0.7 + 6, 7, 0, Math.PI * 2);
     x.fill();
   });
-  let targetFloorTexture = new Pa().load(`./assets/walnut-floor.png`, (e) => {
-      ((e.wrapS = v), (e.wrapT = v), e.repeat.set(2.15, 2.15), (e.colorSpace = Ye), (e.anisotropy = 8));
-    }),
+  let targetFloorTexture = cachedRoomTex(`./assets/walnut-floor.jpg`, () =>
+      new Pa().load(`./assets/walnut-floor.jpg`, (e) => {
+        ((e.wrapS = v), (e.wrapT = v), e.repeat.set(2.15, 2.15), (e.colorSpace = Ye), (e.anisotropy = 8));
+      }),
+    ),
     O = new Q({ map: targetFloorTexture, color: 16777215, roughness: 0.34, metalness: 0.03 }),
     k = t === `warehouse`,
     A = t === `two_bed`,
@@ -23043,9 +23080,11 @@ function Xl(e, t = `studio`) {
     new vi({ color: A ? 10875900 : 12248829, transparent: !0, opacity: k ? 0.25 : 0.75 }),
   );
   (R.position.set(-(j - 0.02), 1.8, -0.6), n.add(R));
-  let cityTexture = new Pa().load(`./assets/city-dusk-window.png`, (e) => {
-    ((e.colorSpace = Ye), (e.anisotropy = 8));
-  });
+  let cityTexture = cachedRoomTex(`./assets/city-dusk-window.jpg`, () =>
+    new Pa().load(`./assets/city-dusk-window.jpg`, (e) => {
+      ((e.colorSpace = Ye), (e.anisotropy = 8));
+    }),
+  );
   let cityView = new Y(
     new Zi(2.5, 1.62),
     new vi({ map: cityTexture, color: 16777215, depthTest: !0, depthWrite: !1 }),
@@ -23087,21 +23126,21 @@ function Xl(e, t = `studio`) {
       l(i, `Potted Plant`, `🪴`, 70));
     let s = new Q({ color: 15986146, roughness: 0.9 }),
       c = new Q({ color: 1013358, roughness: 0.7 }),
-      u = s.clone(),
       d = c.clone(),
-      f = s.clone();
-    ne.push({ mat: u, axis: `z`, pivot: -0.6, sign: 1 }, { mat: f, axis: `x`, pivot: 0.3, sign: 1 });
+      // Each fading wall gets its own material and follows its segment if it's moved or rotated.
+      fw = (e, t, n, r) => {
+        let i = s.clone();
+        (y(e, t, n, r, i, d), ne.push({ mat: i, wall: wallSegs[wallSegs.length - 1], sign: 1 }));
+      };
     let p = [
       [-j, -3.5],
       [-1.3, 0.5],
       [2.2, 3.9],
       [4.7, j],
     ];
-    for (let [e, t] of p) y((e + t) / 2, -0.6, t - e, `x`, u, d);
-    y(0.3, -(0.6 + (j - 0.6) / 2), j - 0.6, `z`, f, d);
-    let m = s.clone();
-    (ne.push({ mat: m, axis: `x`, pivot: 3.9, sign: 1 }),
-      y(3.9, -(0.6 + (j - 0.6) / 2), j - 0.6, `z`, m, d),
+    for (let [e, t] of p) fw((e + t) / 2, -0.6, t - e, `x`);
+    fw(0.3, -(0.6 + (j - 0.6) / 2), j - 0.6, `z`);
+    (fw(3.9, -(0.6 + (j - 0.6) / 2), j - 0.6, `z`),
       E(-2.8, -3.3, 1357990),
       E(1.6, -3.1, 16622767));
     let h = new Q({ color: 10120005, roughness: 0.75 }),
@@ -23160,7 +23199,8 @@ function Xl(e, t = `studio`) {
   function B(e) {
     for (let [t, n] of xe.entries())
       e.find((e) => e.id === t && !e.unpacked) ||
-        (be.remove(n), n.traverse((q) => q.geometry?.dispose?.()), xe.delete(t));
+        (be.remove(n), n.traverse((q) => (q.geometry?.dispose?.(), q.material !== Se && q.material !== Ce && q.material?.dispose?.())),
+        xe.delete(t));
     e.forEach((e) => {
       if (!e.unpacked && !xe.has(e.id)) {
         let t = we(e);
@@ -23267,16 +23307,16 @@ function Xl(e, t = `studio`) {
       for (let t of e)
         if (t.removed) d(t.id);
         else {
+          restoreProp(t.id);
           let e = i.find((e) => e.id === t.id);
           (e && (e.obj.rotation.y = t.rotY), u(t.id, t.x, t.z));
         }
     },
     setWallColor(e) {
-      te.color.set(15127485);
+      e && te.color.set(e);
     },
     setFloorType(e) {
-      e = `floor_wood`;
-      if (e === `floor_wood`) {
+      if (!e || e === `floor_wood`) {
         ((O.map = targetFloorTexture), O.color.set(16777215), (O.roughness = 0.38), (O.needsUpdate = !0));
         return;
       }
@@ -23295,6 +23335,12 @@ function Xl(e, t = `studio`) {
     },
     updateWallTransparency(e, t) {
       for (let n of ne) {
+        if (n.wall) {
+          // A wall running along x fades by z distance and vice versa; deleted walls are skipped.
+          if (!n.wall.seg.parent) continue;
+          ((n.axis = n.wall.axis === `x` ? `z` : `x`),
+            (n.pivot = n.wall.axis === `x` ? n.wall.seg.position.z : n.wall.seg.position.x));
+        }
         let r = ((n.axis === `x` ? e : t) - n.pivot) * n.sign,
           i = 0;
         if (r > 0) {
@@ -23303,7 +23349,7 @@ function Xl(e, t = `studio`) {
         }
         n.mat.opacity = 1 - i * 0.8;
         let a = i > 0.01;
-        ((n.mat.transparent = a), (n.mat.depthWrite = !a), (n.mat.needsUpdate = a));
+        a !== n.mat.transparent && ((n.mat.transparent = a), (n.mat.depthWrite = !a), (n.mat.needsUpdate = !0));
       }
     },
     getBoxAtPoint(e) {
@@ -23420,22 +23466,26 @@ function eu() {
     (i.position.set(t, 0.08, n), e.add(i));
   }),
     r.push({ x: 0, z: -1, r: 2.6 }));
-  let b = new Q({ color: 14078929, roughness: 0.95 });
+  // Path stones reuse one geometry per size.
+  let b = new Q({ color: 14078929, roughness: 0.95 }),
+    sg1 = new X(1.8, 0.035, 0.75),
+    sg2 = new X(0.9, 0.035, 0.7),
+    sg3 = new X(0.75, 0.035, 1.5);
   for (let t = 10; t >= -10; t -= 0.85) {
     if (t > -3.5 && t < 1.5) continue;
-    let n = new Y(new X(1.8, 0.035, 0.75), b);
+    let n = new Y(sg1, b);
     (n.position.set(0, 0.015, t), (n.receiveShadow = !0), e.add(n));
   }
   for (let t = 0; t < Math.PI * 2; t += Math.PI / 8) {
     let n = Math.sin(t) * 3.3,
       r = -1 + Math.cos(t) * 3.3,
-      i = new Y(new X(0.9, 0.035, 0.7), b);
+      i = new Y(sg2, b);
     (i.position.set(n, 0.015, r), (i.rotation.y = -t), (i.receiveShadow = !0), e.add(i));
   }
   [-5.5, 3.5].forEach((t) => {
     for (let n = -7.5; n <= 7.5; n += 0.85) {
       if (Math.abs(n) < 1.2 && t > -3.5 && t < 1.5) continue;
-      let r = new Y(new X(0.75, 0.035, 1.5), b);
+      let r = new Y(sg3, b);
       (r.position.set(n, 0.015, t), (r.receiveShadow = !0), e.add(r));
     }
   });
@@ -23480,7 +23530,10 @@ function eu() {
     let i = $l(S, C);
     (i.position.set(t, 0, n), e.add(i), r.push({ x: t, z: n, r: 0.35 }));
   });
-  let w = [16020150, 16498468, 10980346, 16281969, 3718648];
+  let w = [16020150, 16498468, 10980346, 16281969, 3718648],
+    fbG = new qi(0.7, 14),
+    fG = new $i(0.07, 6, 6),
+    fM = new Q({ color: 16777215, roughness: 0.5 });
   [
     [-3.8, 3.5, 0],
     [-3.8, 7.5, 1],
@@ -23490,12 +23543,12 @@ function eu() {
     [5.5, -1, 0],
     [0, -6.5, 1],
   ].forEach(([t, n, r]) => {
-    let i = new Y(new qi(0.7, 14), new Q({ color: w[r % w.length], roughness: 0.85 }));
+    let i = new Y(fbG, new Q({ color: w[r % w.length], roughness: 0.85 }));
     ((i.rotation.x = -Math.PI / 2), i.position.set(t, 0.02, n), e.add(i));
     for (let r = 0; r < 5; r++) {
       let i = (r / 5) * Math.PI * 2,
         a = 0.35,
-        o = new Y(new $i(0.07, 6, 6), new Q({ color: 16777215, roughness: 0.5 }));
+        o = new Y(fG, fM);
       (o.position.set(t + Math.cos(i) * a, 0.06, n + Math.sin(i) * a), e.add(o));
     }
   });
@@ -23811,7 +23864,10 @@ function ou() {
         i.push({ x: t, z: n, r: 0.55 }));
     }));
   let u = [16007006, 3718648, 16436245, 4906624],
-    d = new Q({ color: 3359061, roughness: 0.5, metalness: 0.4 });
+    d = new Q({ color: 3359061, roughness: 0.5, metalness: 0.4 }),
+    // Bunting flags share one geometry and one material per colour.
+    buntGeo = new Ji(0.14, 0.3, 4),
+    buntMats = u.map((e) => new Q({ color: e, roughness: 0.6 }));
   ([
     [-4.5, 0],
     [4.5, 0],
@@ -23828,7 +23884,7 @@ function ou() {
   }),
     [-3, -1.5, 0, 1.5, 3].forEach((t, n) => {
       for (let r = 0; r < 9; r++) {
-        let i = new Y(new Ji(0.14, 0.3, 4), new Q({ color: u[(r + n) % u.length], roughness: 0.6 }));
+        let i = new Y(buntGeo, buntMats[(r + n) % u.length]);
         ((i.rotation.x = Math.PI), i.position.set(-8 + r * 2, 3.1 - n * 0.35, t), e.add(i));
       }
     }));
@@ -23863,13 +23919,21 @@ function su() {
   let e = new zn();
   e.name = `store_level`;
   let t = [],
-    n = new Q({ color: 15196888, roughness: 0.85 }),
-    r = new Q({ color: 12174543, roughness: 0.85 });
-  for (let t = -7; t <= 7; t++)
-    for (let i = -6; i <= 6; i++) {
-      let a = new Y(new X(1.05, 0.2, 1.05), (t + i) % 2 == 0 ? n : r);
-      (a.position.set(t, -0.1, i), (a.receiveShadow = !0), e.add(a));
-    }
+    n = document.createElement(`canvas`);
+  // One checkered slab instead of 195 tile meshes (same look, one draw call).
+  ((n.width = 15 * 8), (n.height = 13 * 8));
+  let r = n.getContext(`2d`);
+  if (r)
+    for (let e = 0; e < 15; e++)
+      for (let t = 0; t < 13; t++)
+        ((r.fillStyle = (e + t - 13) % 2 == 0 ? `#${(15196888).toString(16)}` : `#${(12174543).toString(16)}`),
+          r.fillRect(e * 8, t * 8, 8, 8));
+  {
+    let t = new Hi(n);
+    ((t.magFilter = 1003), (t.colorSpace = Ye));
+    let r = new Y(new X(15.05, 0.2, 13.05), new Q({ map: t, color: 16777215, roughness: 0.85 }));
+    (r.position.set(0, -0.1, 0), (r.receiveShadow = !0), e.add(r));
+  }
   let i = new Q({ color: 14281973, roughness: 0.9 }),
     a = (t, n, r, a) => {
       let o = new Y(new X(t, 3.2, n), i);
@@ -23886,7 +23950,11 @@ function su() {
     (n.position.set(0, 3.05, t), e.add(n));
   });
   let s = new Q({ color: 6583435, roughness: 0.6, metalness: 0.3 }),
-    c = [16020150, 16498468, 4906624, 3718648, 16281969, 10980346];
+    c = [16020150, 16498468, 4906624, 3718648, 16281969, 10980346],
+    // Shelf products share one geometry and one material per colour.
+    productGeo = new X(0.28, 0.26, 0.28),
+    pm = new Map(),
+    productMat = (e) => (pm.has(e) || pm.set(e, new Q({ color: e, roughness: 0.6 })), pm.get(e));
   [
     [-5, -2.5],
     [-1.6, -2.5],
@@ -23900,7 +23968,7 @@ function su() {
       let t = new Y(new X(2.4, 0.08, 0.7), s);
       ((t.position.y = 0.4 + e * 0.55), (t.castShadow = !0), a.add(t));
       for (let t = 0; t < 5; t++) {
-        let n = new Y(new X(0.28, 0.26, 0.28), new Q({ color: c[(i + e + t) % c.length], roughness: 0.6 }));
+        let n = new Y(productGeo, productMat(c[(i + e + t) % c.length]));
         (n.position.set(-0.95 + t * 0.48, 0.58 + e * 0.55, 0), a.add(n));
       }
     }
@@ -24260,6 +24328,7 @@ function cuteFigure(m) {
       const c = hairG.children[0];
       (hairG.remove(c), c.geometry?.dispose?.());
     }
+    if (st === `bald`) return;
     const add = (g, x, y, z, sx = 1, sy = 1, sz = 1) => {
       const o = new Y(g, m.hair);
       (o.position.set(x, y, z), o.scale.set(sx, sy, sz), (o.castShadow = !0), hairG.add(o));
@@ -24305,7 +24374,7 @@ function cuteFigure(m) {
   const armGeo = new Ki(0.065, 0.13, 4, 10);
   armGeo.translate(0, -0.12, 0);
   const mkArm = (sx) => {
-    const a = new Y(armGeo.clone(), m.shirt);
+    const a = new Y(armGeo, m.shirt);
     (a.position.set(sx * 0.3, 0.8, 0), (a.castShadow = !0));
     const hand = new Y(new $i(0.07, 10, 8), m.skin);
     (hand.position.set(0, -0.27, 0), a.add(hand), body.add(a));
@@ -24316,7 +24385,7 @@ function cuteFigure(m) {
   const legGeo = new Z(0.09, 0.08, 0.3, 10);
   legGeo.translate(0, -0.15, 0);
   const mkLeg = (sx) => {
-    const l = new Y(legGeo.clone(), m.pants);
+    const l = new Y(legGeo, m.pants);
     (l.position.set(sx * 0.12, 0.4, 0), (l.castShadow = !0));
     const shoe = new Y(new $i(0.13, 12, 10), m.shoe);
     (shoe.scale.set(1, 0.62, 1.45),
@@ -24336,6 +24405,7 @@ function cuteFigure(m) {
     body,
     head,
     skull,
+    eyeGroups,
     hair: hairG,
     setHair,
     armL,
@@ -24763,6 +24833,7 @@ function _u(e) {
     root: t,
     bodyGroup: l,
     headGroup: d,
+    eyeGroups: F0.eyeGroups,
     armL: _,
     armR: v,
     legL: b,
@@ -25050,6 +25121,16 @@ var yu = [
     },
   ],
   bu = [...uu, ...yu];
+// Night walker config whose start point and waypoints avoid park obstacles (pond, trees, benches).
+function nightWalkerConfig(e) {
+  let t = gu();
+  if (!e || !e.length) return t;
+  let n = (t) => e.some((e) => Math.hypot(t.x - e.x, t.z - e.z) < e.r + 0.4),
+    r = (e, r, i) => {
+      for (let a = 0; a < 12 && n(e); a++) ((e.x = (Math.random() * 2 - 1) * r), (e.z = (Math.random() * 2 - 1) * i));
+    };
+  return (r(t.startPos, 6, 6), t.waypoints.forEach((e) => r(e, 8, 9)), t);
+}
 function xu(e = uu, t = `park_npcs_group`) {
   let n = new zn();
   n.name = t;
@@ -25066,7 +25147,10 @@ function xu(e = uu, t = `park_npcs_group`) {
     },
     setNightWalker(e) {
       e && !i
-        ? ((i = _u(gu())), (i.root.userData = { npc: !0, npcId: `night_walker` }), n.add(i.root))
+        ? ((i = _u(nightWalkerConfig(r[0]?.obstacles))),
+          (i.obstacles = r[0]?.obstacles),
+          (i.root.userData = { npc: !0, npcId: `night_walker` }),
+          n.add(i.root))
         : !e && i && (n.remove(i.root), disposeNpcRoot(i.root), (i = null));
     },
     update(e, t) {
@@ -26188,6 +26272,11 @@ function Iu(e, t, n) {
     Math.min(100, Math.max(0, Math.round(r)))
   );
 }
+// Spot in front of a placed furniture item, respecting its rotation (front faces +z at rotation 0).
+function frontOf(e, t) {
+  let n = e.rotation || 0;
+  return { x: e.x + Math.sin(n) * t, z: e.z + Math.cos(n) * t };
+}
 function Lu(e, t, n, r) {
   let i = [t.customization.primaryTrait, t.customization.secondaryTrait];
   if (t.mood < 20 && Math.random() < 0.55 && e !== `sleep`)
@@ -26211,7 +26300,7 @@ function Lu(e, t, n, r) {
                 ? `Food time! You know the way to my heart!`
                 : `Good idea, my stomach is rumbling.`,
               action: `eating`,
-              targetPos: { x: e.x, z: e.z + 0.6 },
+              targetPos: frontOf(e, 0.6),
               targetFurnitureUid: e.uid,
               thoughtIcon: `🍔`,
             }
@@ -26302,7 +26391,7 @@ function Lu(e, t, n, r) {
             accepted: !0,
             message: `Ah, time to decompress and chill.`,
             action: `lounging`,
-            targetPos: { x: e.x, z: e.z + 0.4 },
+            targetPos: frontOf(e, 0.4),
             targetFurnitureUid: e.uid,
             thoughtIcon: `🛋️`,
           }
@@ -26321,7 +26410,7 @@ function Lu(e, t, n, r) {
             accepted: !0,
             message: `Binge-watching time! Pass the popcorn.`,
             action: `watching_tv`,
-            targetPos: { x: e.x, z: e.z + 1.5 },
+            targetPos: frontOf(e, 1.5),
             targetFurnitureUid: e.uid,
             thoughtIcon: `🍿`,
           }
@@ -26336,7 +26425,7 @@ function Lu(e, t, n, r) {
               ? `Ooh, chapters 1 through 10 incoming!`
               : `Browsing through some cool magazines.`,
             action: `reading`,
-            targetPos: { x: e.x, z: e.z + 0.6 },
+            targetPos: frontOf(e, 0.6),
             targetFurnitureUid: e.uid,
             thoughtIcon: `📚`,
           }
@@ -26356,7 +26445,7 @@ function Lu(e, t, n, r) {
               accepted: !0,
               message: `Freelance grind mode: ON! 💰`,
               action: `working`,
-              targetPos: { x: e.x, z: e.z + 0.5 },
+              targetPos: frontOf(e, 0.5),
               targetFurnitureUid: e.uid,
               thoughtIcon: `💼`,
             }
@@ -26386,7 +26475,7 @@ function Lu(e, t, n, r) {
             accepted: !0,
             message: `The whispers grow satisfied... for now. 🌑`,
             action: `appeasing`,
-            targetPos: { x: e.x, z: e.z + 0.5 },
+            targetPos: frontOf(e, 0.5),
             targetFurnitureUid: e.uid,
             thoughtIcon: `🌑`,
           }
@@ -26404,7 +26493,7 @@ function Lu(e, t, n, r) {
             accepted: !0,
             message: `Unpacking "${e.title}"! Wonder what's inside...`,
             action: `unpacking`,
-            targetPos: { x: e.x, z: e.z + 0.5 },
+            targetPos: frontOf(e, 0.5),
             targetBoxId: e.id,
             thoughtIcon: `🎁`,
           }
@@ -26479,9 +26568,11 @@ function Uu(e, t, n) {
   }
 }
 function Wu(e) {
-  let t = Number(e.pixelRatio),
-    n = Number(e.gameSpeed),
-    r = Number(e.soundVolume);
+  // null/empty must fall back to the default, not Number(null) === 0.
+  let i = (e) => (e == null || e === `` ? NaN : Number(e)),
+    t = i(e.pixelRatio),
+    n = i(e.gameSpeed),
+    r = i(e.soundVolume);
   return {
     backgroundColor: e.backgroundColor || `#18181b`,
     pixelRatio: Number.isFinite(t) ? Math.min(2, Math.max(1, t)) : 1.5,
@@ -26490,6 +26581,7 @@ function Wu(e) {
     soundVolume: Number.isFinite(r) ? Math.max(0, Math.min(1, r)) : 0.7,
   };
 }
+var ARCADE_TOKEN = 5;
 function Gu(e, t, n) {
   let r = { width: 1, height: 1 },
     i = new Jn();
@@ -26546,6 +26638,7 @@ function Gu(e, t, n) {
       sellToNpc: () => ({ success: !1, message: `` }),
       cookMeth: () => ({ success: !1, message: `` }),
       playArcadeGame: () => ({ coins: 0 }),
+      arcadeInsertCoin: () => !1,
       goHome: () => !1,
       unstuck() {},
       sendVisitorHome: () => !1,
@@ -26594,6 +26687,7 @@ function Gu(e, t, n) {
   (d.position.set(-6, 8, -6), i.add(d));
   let sunset = new Qa(16746066, 1.3);
   (sunset.position.set(-9, 3.6, -1.2), i.add(sunset));
+  // Only used for the Voices flicker; the room look is tuned with it off otherwise.
   let f = new Ya(16756829, 6, 12, 2);
   (f.position.set(-1.6, 3.1, -1.2), i.add(f));
   let warmFill = new Ya(16750928, 6.5, 12, 2);
@@ -26640,7 +26734,6 @@ function Gu(e, t, n) {
       c.color.copy(g).lerp(moodAmbNight, t * 0.7),
       (c.intensity = 0.62 + 0.5 * e + 0.55 * out),
       (f.visible = warmFill.visible = wallGlow.visible = windowRim.visible = sunset.visible = !out),
-      (f.intensity = 5 + 5 * t + 2 * dusk),
       (warmFill.intensity = 5.5 + 5 * t + 2 * dusk),
       (wallGlow.intensity = 3.5 + 4 * t + 1.5 * dusk),
       (windowRim.intensity = 2.4 + 2.4 * dusk + 3 * t),
@@ -26985,7 +27078,14 @@ function Gu(e, t, n) {
         (t.userData = { body: !0 }),
         n.add(t));
     }
-    (n.position.set(e, 0, t), Et.add(n));
+    ((n.userData.home = De), n.position.set(e, 0, t), Et.add(n));
+  }
+  // Bodies and gore belong to the home they were made in (untagged legacy ones to the studio).
+  function goreHere(e) {
+    return (e.userData.home ?? `apartment`) === De;
+  }
+  function syncHomeGore() {
+    for (let e of [bt, Et, Dt]) for (let t of e.children) t.visible = goreHere(t);
   }
   function Wt() {
     let e = [
@@ -27002,7 +27102,7 @@ function Gu(e, t, n) {
         (e.rotation.y = t.rotY),
         (e.rotation.z = Math.random() * Math.PI * 2),
         e.scale.setScalar(0.5 + Math.random() * 0.8),
-        (e.userData = { body: !0 }),
+        (e.userData = { body: !0, home: De }),
         Dt.add(e));
     }
   }
@@ -27016,17 +27116,25 @@ function Gu(e, t, n) {
       i.position.set(e, 0.018, t),
       i.scale.set(n, r, 1),
       (i.renderOrder = 2),
-      (i.userData = { body: !0 }));
+      (i.userData = { body: !0, home: De }));
     let a = new Y(St.pool, wt.poolDetail);
     ((a.rotation.x = -Math.PI / 2),
       a.position.set(e, 0.022, t),
       a.scale.set(n * 0.86, r * 0.86, 1),
       (a.renderOrder = 3),
-      (a.userData = { body: !0 }),
+      (a.userData = { body: !0, home: De }),
       Et.add(i, a));
   }
+  // Bodies mostly share geometry/materials; only the per-body pieces (hair, decal) are freed.
+  let bodyOwned = new WeakSet();
+  function removeBody(e) {
+    (e.removeFromParent(),
+      e.traverse((e) => {
+        (bodyOwned.has(e.geometry) && e.geometry.dispose(), bodyOwned.has(e.material) && e.material.dispose());
+      }));
+  }
   function Kt() {
-    for (; bt.children.length > 0; ) bt.remove(bt.children[0]);
+    for (; bt.children.length > 0; ) removeBody(bt.children[0]);
     dt.length = 0;
   }
   let qt = [
@@ -27056,10 +27164,11 @@ function Gu(e, t, n) {
       }));
   }
   function Zt() {
-    let e = bt.children.findIndex((e) => e.name === `body_root`);
-    e >= 0 && bt.remove(bt.children[e]);
-    let t = bt.children.findIndex((e) => e.name === `blood_trail`);
-    (t >= 0 && bt.remove(bt.children[t]), dt.shift());
+    let e = bt.children.findIndex((e) => e.name === `body_root` && goreHere(e));
+    e >= 0 && removeBody(bt.children[e]);
+    let t = bt.children.findIndex((e) => e.name === `blood_trail` && goreHere(e)),
+      n = dt.findIndex((e) => (e.home ?? `apartment`) === De);
+    (t >= 0 && bt.remove(bt.children[t]), n >= 0 && dt.splice(n, 1));
   }
   function Qt() {
     return k.hunger < 45
@@ -27214,13 +27323,44 @@ function Gu(e, t, n) {
       d = new Map([[l, 0]]),
       f = new Map([[l, Math.hypot(s.gx - c.gx, s.gz - c.gz)]]),
       p = new Map(),
-      m = [l],
       h = new Set(),
-      g = !1;
-    for (; m.length > 0; ) {
-      let e = 0;
-      for (let t = 1; t < m.length; t++) (f.get(m[t]) ?? 1 / 0) < (f.get(m[e]) ?? 1 / 0) && (e = t);
-      let t = m.splice(e, 1)[0];
+      g = !1,
+      // Binary min-heap of [f, cell] (stale entries are skipped on pop) plus a per-search walkability cache.
+      hp = [[f.get(l), l]],
+      push = (e) => {
+        let t = hp.push(e) - 1;
+        for (; t > 0; ) {
+          let e = (t - 1) >> 1;
+          if (hp[e][0] <= hp[t][0]) break;
+          (([hp[e], hp[t]] = [hp[t], hp[e]]), (t = e));
+        }
+      },
+      pop = () => {
+        let e = hp[0],
+          t = hp.pop();
+        if (hp.length > 0) {
+          hp[0] = t;
+          let e = 0;
+          for (;;) {
+            let t = e * 2 + 1,
+              n = t + 1,
+              r = e;
+            if ((t < hp.length && hp[t][0] < hp[r][0] && (r = t), n < hp.length && hp[n][0] < hp[r][0] && (r = n), r === e))
+              break;
+            (([hp[e], hp[r]] = [hp[r], hp[e]]), (e = r));
+          }
+        }
+        return e;
+      },
+      wc = new Map(),
+      cn2 = (e, t) => {
+        let n = (t + 8) * 128 + (e + 8),
+          r = wc.get(n);
+        return (r === void 0 && ((r = cn(e, t)), wc.set(n, r)), r);
+      };
+    for (; hp.length > 0; ) {
+      let [e, t] = pop();
+      if (h.has(t) || e > (f.get(t) ?? 1 / 0)) continue;
       if (t === u) {
         g = !0;
         break;
@@ -27233,7 +27373,7 @@ function Gu(e, t, n) {
           if (i === 0 && e === 0) continue;
           let a = n + i,
             o = r + e;
-          if (!cn(a, o) || (i !== 0 && e !== 0 && (!cn(n + i, r) || !cn(n, r + e)))) continue;
+          if (!cn2(a, o) || (i !== 0 && e !== 0 && (!cn2(n + i, r) || !cn2(n, r + e)))) continue;
           let s = ln(a, o);
           if (h.has(s)) continue;
           let l = i !== 0 && e !== 0 ? 1.414 : 1,
@@ -27242,7 +27382,7 @@ function Gu(e, t, n) {
             (p.set(s, t),
             d.set(s, u),
             f.set(s, u + Math.hypot(a - c.gx, o - c.gz)),
-            m.includes(s) || m.push(s));
+            push([f.get(s), s]));
         }
     }
     if (!g) return [];
@@ -27314,7 +27454,10 @@ function Gu(e, t, n) {
         (z.currentAction = `disposing`),
         (z.actionProgress = 0),
         (_e = 0),
-        (z.targetPosition = { x: r.x + 0.7, z: r.z + 0.3 }),
+        (z.targetPosition = (() => {
+          let e = r.rotation || 0;
+          return { x: r.x + 0.7 * Math.cos(e) + 0.3 * Math.sin(e), z: r.z - 0.7 * Math.sin(e) + 0.3 * Math.cos(e) };
+        })()),
         (z.thoughtBubble =
           e === `stab`
             ? { text: `Time to grab the knife... shhh. 🔪`, icon: `🔪`, timeLeft: 4, type: `urgent` }
@@ -27324,8 +27467,32 @@ function Gu(e, t, n) {
         { success: !0, message: `On it!` })
       : { success: !1, message: `The station has vanished...` };
   }
+  // Something in the room moved: drop cached paths so nobody walks through it.
+  function invalidatePaths() {
+    ((Ue = []), (We = { x: 9999, z: 9999 }), roommates.forEach((e) => (e._path = [])));
+  }
+  // Place the Heathen outside the destination's entrance and walk them in.
+  function arriveAt(e) {
+    let t = Oe.gatePosition,
+      n = H(e)
+        ? C.doorPosition
+        : e === `park`
+          ? { outsideX: t.x, outsideZ: t.outsideZ, insideX: t.x, insideZ: t.insideZ }
+          : ((t = e === `market` ? W.doorPosition : e === `store` ? ke.doorPosition : U.doorPosition),
+            { outsideX: t.x, outsideZ: t.outsideZ, insideX: t.x, insideZ: t.insideZ });
+    ((z.position = { x: n.outsideX, z: n.outsideZ }),
+      S.root.position.set(n.outsideX, 0, n.outsideZ),
+      (S.root.visible = !0),
+      (Te = `enter`),
+      (z.targetPosition = { x: n.insideX, z: n.insideZ }));
+  }
   function gn(e) {
-    (sceneCancel(), (B = e));
+    // A visitor belongs to the home they visited: once you change location they are gone.
+    (sceneCancel(),
+      K &&
+        e !== B &&
+        (G.remove(K.inst.root), disposeNpcRoot(K.inst.root), (K = null), (ut.length = 0), n.onVisitorUpdate?.(null)),
+      (B = e));
     let t = H(e);
     (t &&
       (oe(),
@@ -27350,6 +27517,7 @@ function Gu(e, t, n) {
       (bt.visible = t),
       (Et.visible = t),
       (Dt.visible = t),
+      t && syncHomeGore(),
       xt && (xt.visible = t),
       (G.visible = t),
       t && rmPlaceAll(),
@@ -27474,7 +27642,11 @@ function Gu(e, t, n) {
     const base = 10 + Math.floor(affinity / 10);
     const stamMod = stamina > 60 ? 1.2 : stamina > 30 ? 1 : 0.6;
     const posMod = { missionary: 1, cowgirl: 1.15, doggy: 1.1, oral: 0.9, rough: 1.25 }[position] || 1;
-    const pleasure = Math.floor(base * stamMod * posMod * (0.8 + Math.random() * 0.4));
+    // Toys apply to every partner (roommates and visitors alike).
+    const pleasure =
+      Math.floor(base * stamMod * posMod * (0.8 + Math.random() * 0.4)) +
+      (toys.mirror ? 5 : 0) +
+      (toys.restraints && position === `rough` ? 8 : 0);
     const stamCost = position === `rough` ? 35 : position === `oral` ? 15 : 25;
     return { pleasure, stamCost, text: `${position} — intensity ${pleasure}` };
   }
@@ -27663,10 +27835,10 @@ function Gu(e, t, n) {
       } else _st = 0.3;
     }
   }
-  const cdMap = {};
   let scene = null,
     heartSprites = null,
     heartTex = null,
+    engineTimers = new Set(),
     mcv = null,
     mctx = null;
   const SCENE_ACTIONS = [`sex`, `strip`, `threesome`],
@@ -27723,11 +27895,7 @@ function Gu(e, t, n) {
     partners.forEach((pt, ix) =>
       spots.push(put(ang0 + Math.PI + (cnt > 1 ? (ix - (cnt - 1) / 2) * 1.9 : 0))),
     );
-    let mosaic = !0;
-    try {
-      mosaic = localStorage.getItem(`heathens_mosaic_v1`) !== `false`;
-    } catch (err) {}
-    scene = { kind, pos, partners, spots, c, phase: `approach`, t: 0, dur: SCENE_DUR[kind] || 6, mosaic };
+    scene = { kind, pos, partners, spots, c, phase: `approach`, t: 0, dur: SCENE_DUR[kind] || 6 };
     partners.forEach((pt) => {
       (pt.rm && ((pt.rm._scene = !0), (pt.rm._path = [])), pt.visitor && K && (K.sceneLock = !0));
     });
@@ -27850,11 +28018,23 @@ function Gu(e, t, n) {
     }
     if (sc.t > 0.5) sceneCancel();
   }
+  const mosaicVec = new J(),
+    MOSAIC_CORNERS = [
+      [-0.5, 0],
+      [0.5, 0],
+      [-0.5, 1.75],
+      [0.5, 1.75],
+    ];
+  let mosaicLast = 0;
   function sceneMosaic() {
-    if (!scene || scene.phase !== `act` || !scene.mosaic) {
+    if (!scene || scene.phase !== `act` || !mosaicPref.on) {
       mcv && mcv.style.display !== `none` && (mcv.style.display = `none`);
       return;
     }
+    // A pixelated mosaic doesn't need 60fps; the canvas readback is the expensive part.
+    const now = performance.now();
+    if (mcv && mcv.style.display === `block` && now - mosaicLast < 50) return;
+    mosaicLast = now;
     const cvs = s.renderer.domElement,
       W = r.width,
       Hh = r.height;
@@ -27873,14 +28053,9 @@ function Gu(e, t, n) {
       y0 = 1e9,
       x1 = -1e9,
       y1 = -1e9;
-    const v = new J();
+    const v = mosaicVec;
     for (const q of pts)
-      for (const [dx, yy] of [
-        [-0.5, 0],
-        [0.5, 0],
-        [-0.5, 1.75],
-        [0.5, 1.75],
-      ]) {
+      for (const [dx, yy] of MOSAIC_CORNERS) {
         v.set(q.x + dx, yy, q.z).project(a);
         const sx = ((v.x + 1) / 2) * W,
           sy = ((1 - v.y) / 2) * Hh;
@@ -27906,11 +28081,13 @@ function Gu(e, t, n) {
     ((mctx.imageSmoothingEnabled = !0), mctx.drawImage(cvs, x0 * kx, y0 * ky, w * kx, h * ky, 0, 0, tw, th));
   }
 
+  // Cooldowns run on the game clock (stops while paused, follows game speed) and are saved with the bills.
   function onCd(key, sec) {
-    const now = performance.now() / 1e3,
-      t = cdMap[key] || 0;
+    const now = bills.clock || 0,
+      cd = (bills.cd ||= {}),
+      t = cd[key] || 0;
     if (now < t) return Math.ceil(t - now);
-    cdMap[key] = now + sec;
+    cd[key] = now + sec;
     return 0;
   }
   function billPreview() {
@@ -27920,8 +28097,7 @@ function Gu(e, t, n) {
       food = 8 + 6 * roommates.length + 10 * roommates.filter((r) => r.baby).length;
     let contrib = 0;
     roommates.forEach((rm) => {
-      if (!rm.atWork)
-        contrib += Math.floor((rm.wage || 30) * (rm.contribution || 0.3) * (rm.married ? 1.5 : 1));
+      contrib += Math.floor((rm.wage || 40) * (rm.contribution || 0.4) * (rm.married ? 1.5 : 1));
     });
     const total = rent + util + food;
     return {
@@ -27931,7 +28107,8 @@ function Gu(e, t, n) {
       contrib,
       total,
       youPay: Math.max(20, total - contrib),
-      eta: Math.max(0, Math.round((15 - (bills.due || 0)) * 8 - (window._heathensTick || 0))),
+      owed: bills.owed || 0,
+      eta: Math.max(0, Math.round((15 - (bills.due || 0)) * 8 - (bills.tick || 0))),
     };
   }
   function checkAchievements() {
@@ -27968,10 +28145,17 @@ function Gu(e, t, n) {
   }
   function Cn(e, t) {
     // bills & life sim tick (slow)
-    if (!window._heathensTick) window._heathensTick = 0;
-    window._heathensTick += e;
-    if (window._heathensTick > 8) {
-      window._heathensTick = 0;
+    bills.clock = (bills.clock || 0) + e;
+    bills.tick = (bills.tick || 0) + e;
+    for (; bills.tick >= 8; ) {
+      bills.tick -= 8;
+      // Unpaid bills are collected from any cash you have before anything else.
+      if (bills.owed > 0 && A > 0) {
+        const pay = Math.min(A, bills.owed);
+        A -= pay;
+        bills.owed -= pay;
+        bills.owed <= 0 && ((bills.owed = 0), (bills.missed = 0));
+      }
       roommates.forEach((rm) => {
         rm.affinity = Math.max(0, Math.min(100, rm.affinity));
         rm.jealousy = Math.max(0, Math.min(100, (rm.jealousy || 0) - 2));
@@ -27981,8 +28165,10 @@ function Gu(e, t, n) {
       roommates.forEach((rm) => {
         if (rm.pregnant) {
           rm.pregnancyProgress = (rm.pregnancyProgress || 0) + 1;
-          if (rm.pregnancyProgress >= 12 && !rm.baby) {
+          if (rm.pregnancyProgress >= 12) {
             rm.baby = true;
+            rm.pregnant = false;
+            rm.pregnancyProgress = 0;
             z.thoughtBubble = {
               text: `${rm.name} had a baby! 👶 Extra costs incoming.`,
               icon: `👶`,
@@ -28003,7 +28189,7 @@ function Gu(e, t, n) {
       // heat decay & soft needs & achievements
       if (heat > 0) heat = Math.max(0, heat - 1);
       if (heat >= 50 && Math.random() < 0.15 + (heat >= 80 ? 0.2 : 0)) {
-        const fine = Math.min(A, Math.floor(40 + A * 0.2));
+        const fine = Math.max(0, Math.min(A, Math.floor(40 + A * 0.2)));
         A -= fine;
         heat = Math.max(0, heat - 30);
         reputation.criminal += 1;
@@ -28029,7 +28215,7 @@ function Gu(e, t, n) {
         bills.rent = bp.rent;
         if (A >= youPay) {
           A -= youPay;
-          bills.missed = Math.max(0, (bills.missed || 0) - 1);
+          bills.missed = bills.owed > 0 ? bills.missed || 0 : 0;
           z.thoughtBubble = {
             text: `Bills paid: $${youPay} (rent $${bp.rent}, utilities $${bp.util}, groceries $${bp.food}; roommates helped $${contrib})`,
             icon: `🧾`,
@@ -28037,13 +28223,17 @@ function Gu(e, t, n) {
             type: `positive`,
           };
         } else {
+          // Pay what you can; the rest becomes debt that is taken from future income.
+          const paid = Math.max(0, A);
+          A -= paid;
+          bills.owed = (bills.owed || 0) + (youPay - paid);
           bills.missed = (bills.missed || 0) + 1;
           roommates.forEach((rm) => {
             rm.affinity = Math.max(0, rm.affinity - 6);
             rm.jealousy = (rm.jealousy || 0) + 5;
           });
           z.thoughtBubble = {
-            text: `Missed bills! Roommates are unhappy.`,
+            text: `Missed bills! You owe $${bills.owed}.${roommates.length ? ` Roommates are unhappy.` : ``}`,
             icon: `⚠️`,
             timeLeft: 5,
             type: `negative`,
@@ -28067,13 +28257,17 @@ function Gu(e, t, n) {
                 timeLeft: 6,
                 type: `negative`,
               };
-            } else
+            } else {
+              // Nobody to blame: the stress of eviction notices hits you directly.
+              j = Math.max(0, j - 40);
+              k.comfort = Math.max(0, (k.comfort ?? 50) - 25);
               z.thoughtBubble = {
-                text: `The bills are piling up! Pay soon.`,
+                text: `Eviction notice! You owe $${bills.owed}. Every dollar you earn goes to the landlord.`,
                 icon: `⚠️`,
                 timeLeft: 5,
                 type: `negative`,
               };
+            }
           }
         }
         n.onStateUpdate?.(z, A, j);
@@ -28168,7 +28362,7 @@ function Gu(e, t, n) {
           (i.armR.rotation.x = r * 0.6));
       }
     } else if (K.phase === `inRoom`) {
-      let o = bt.children.some((e) => e.name === `body_root`) || Et.children.length > 0;
+      let o = bt.children.some((e) => e.name === `body_root` && goreHere(e)) || Et.children.some(goreHere);
       if (!K.scared && o) {
         ((K.scared = !0), (K.scaredTimer = 2.4));
         let e = i.getScreenCoords(a, r.width, r.height);
@@ -28195,7 +28389,8 @@ function Gu(e, t, n) {
   }
   function wn(e) {
     return (
-      (Te || ft || mt || _t !== null || q !== null || z.currentAction !== `idle`) &&
+      e !== B &&
+        (Te || ft || mt || _t !== null || q !== null || z.currentAction !== `idle`) &&
         (_n(),
         (z.thoughtBubble = {
           text: `Dropping everything — let's go! 🚶`,
@@ -28205,7 +28400,7 @@ function Gu(e, t, n) {
         }),
         n.onAudio?.({ name: `click` })),
       H(B) && e !== B && lt && ((lt = null), n.onVisitorUpdate?.(null)),
-      H(B) && e === `park` && xn(),
+      H(B) && e !== B && xn(),
       e === B
         ? ((z.thoughtBubble = {
             text:
@@ -28312,13 +28507,14 @@ function Gu(e, t, n) {
                 })),
       n.onStateUpdate?.(z, A, j));
   }
-  function En(e, t, n = `voices`) {
+  function En(e, t, n = `voices`, home = De) {
     let r = Ht(e),
       i = Ht(t),
-      a = C.doorPosition.x,
-      o = C.doorPosition.z,
+      hr = home === `apartment2` ? T : home === `warehouse` ? E : w,
+      a = hr.doorPosition.x,
+      o = hr.doorPosition.z,
       s = new zn();
-    s.name = `blood_trail`;
+    ((s.name = `blood_trail`), (s.userData.home = home));
     let c = Math.hypot(a - r, o - i),
       l = Math.max(2, Math.ceil(c / 0.28));
     for (let e = 0; e <= l; e++) {
@@ -28349,6 +28545,7 @@ function Gu(e, t, n) {
     let m = new Y(St.head, wt.skin);
     (m.scale.set(0.9, 0.82, 0.95), (m.rotation.z = -0.16), m.position.set(0.69, 0.2, 0.04));
     let h = new Y(new $i(0.17, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), wt.hair);
+    bodyOwned.add(h.geometry);
     h.position.set(0.71, 0.27, -0.045);
     let g = new Y(St.faceDetail, wt.faceDetail);
     (g.scale.set(1, 0.22, 0.35), g.position.set(0.73, 0.2, 0.195));
@@ -28377,6 +28574,7 @@ function Gu(e, t, n) {
     let k = O.clone();
     k.position.set(-0.97, 0.1, -0.25);
     let A = new Y(St.bodyDecal, new vi({ map: Tt, transparent: !0, opacity: 0.68, depthWrite: !1, side: 2 }));
+    bodyOwned.add(A.material);
     ((A.rotation.x = -Math.PI / 2), A.position.set(0, 0.035, 0));
     let j = new Y(St.pool, wt.poolBase);
     ((j.rotation.x = -Math.PI / 2), j.position.set(0.15, 0.018, 0), j.scale.set(2.7, 1.55, 1));
@@ -28389,15 +28587,17 @@ function Gu(e, t, n) {
         e instanceof Y && ((e.castShadow = !0), (e.userData = { body: !0 }));
       }),
       u.position.set(r, 0, i),
+      (u.userData.home = home),
       bt.add(u),
-      dt.push({ x: r, z: i }),
+      dt.push({ x: r, z: i, home }),
+      (s.visible = u.visible = home === De),
       (ce.kills += 1));
     let N = String(Math.floor(p)).padStart(2, `0`),
       P = String(Math.floor((p % 1) * 60)).padStart(2, `0`);
     (ce.bodies.push({
       cause: n === `stab` ? `🔪 Knifed a captive` : `😱 The Voices won`,
       time: `${N}:${P}`,
-      place: `Apartment`,
+      place: { apartment: `Studio`, apartment2: `2-Bedroom`, warehouse: `Warehouse` }[home] ?? `Apartment`,
     }),
       le());
   }
@@ -28410,24 +28610,32 @@ function Gu(e, t, n) {
       }
     });
   }
+  let tvNodes = [];
   function On() {
-    for (; D.children.length > 0; ) D.remove(D.children[0]);
-    I.forEach((e) => {
-      let t = Pu(e.itemId);
-      (t.position.set(e.x, 0, e.z),
-        (t.rotation.y = e.rotation),
-        (t.userData = { uid: e.uid }),
-        e.itemId === `floor_lamp` && Dn(t, e.isOn !== !1),
-        D.add(t));
-    });
+    // Free the GPU resources of the previous furniture meshes (shared textures are kept).
+    let e = new Set([Nu(), window.__mushTex].filter(Boolean));
+    for (; D.children.length > 0; ) Hl(D.children[0], e);
+    ((tvNodes = []),
+      I.forEach((e) => {
+        let t = Pu(e.itemId);
+        (t.position.set(e.x, 0, e.z),
+          (t.rotation.y = e.rotation),
+          (t.userData = { uid: e.uid }),
+          e.itemId === `floor_lamp` && Dn(t, e.isOn !== !1),
+          t.traverse((e) => {
+            (e.name === `tv_screen` || e.name === `tv_glow`) && tvNodes.push(e);
+          }),
+          D.add(t));
+      }),
+      (An = !0));
   }
   function kn() {
-    if (!H(B)) return;
-    let e = I.some((e) => e.itemId === `retro_tv` || e.itemId === `smart_tv`);
-    if (!(!e && !An)) {
-      An = e;
-      for (let e of D.children)
-        e.traverse((e) => {
+    // TVs only need per-frame work while flickering; otherwise update once when the state changes.
+    if (!H(B) || tvNodes.length === 0 || (!Je && !An)) return;
+    An = Je;
+    {
+      for (let e of tvNodes)
+        (() => {
           if (e.name === `tv_screen`) {
             let t = e.material;
             if (t.map) {
@@ -28438,7 +28646,7 @@ function Gu(e, t, n) {
               } else t.color.setRGB(0.25, 0.25, 0.25);
             }
           } else e.name === `tv_glow` && (e.intensity = Je ? 1.3 + Math.random() * 0.9 : 0);
-        });
+        })();
     }
   }
   let An = !1;
@@ -28484,8 +28692,9 @@ function Gu(e, t, n) {
       ($e.root.visible = !1),
       e.add($e.root));
     let t = new vi({ color: 16718362 });
-    ($e.headGroup.children.forEach((e) => {
-      e instanceof Y && e.position.z >= 0.2 && (e.material = t);
+    // Glowing red eyes (the eye meshes live inside per-eye groups).
+    ($e.eyeGroups.forEach((e) => {
+      e.children[0].material = t;
     }),
       (it = new zn()));
     let n = new Y(new qi(1.5, 24), new vi({ color: 0, transparent: !0, opacity: 0.55, depthWrite: !1 }));
@@ -28694,7 +28903,7 @@ function Gu(e, t, n) {
           (z.actionProgress = 0),
           (_e = 0),
           (ge = 5),
-          (z.targetPosition = { x: t.x, z: t.z + 0.7 }),
+          (z.targetPosition = frontOf(t, 0.7)),
           (z.thoughtBubble = {
             text:
               t.itemId === `mushroom_bin`
@@ -28718,7 +28927,7 @@ function Gu(e, t, n) {
           (z.actionProgress = 0),
           (_e = 0),
           (ge = 6),
-          (z.targetPosition = { x: t.x, z: t.z + 0.7 }),
+          (z.targetPosition = frontOf(t, 0.7)),
           (z.thoughtBubble = {
             text: `Firing up the lab... keep it down. 🧪`,
             icon: `🧪`,
@@ -28871,9 +29080,10 @@ function Gu(e, t, n) {
       if (
         ($n(e),
         Bn.setFromCamera(Vn, a),
-        (dt.length > 0 || Et.children.length > 0) &&
-          (Bn.intersectObjects(bt.children, !0).length > 0 ||
-            Bn.intersectObjects(Et.children, !0).length > 0))
+        H(B) &&
+          (dt.length > 0 || Et.children.length > 0) &&
+          (Bn.intersectObjects(bt.children.filter(goreHere), !0).length > 0 ||
+            Bn.intersectObjects(Et.children.filter(goreHere), !0).length > 0))
       ) {
         mn();
         return;
@@ -29212,7 +29422,7 @@ function Gu(e, t, n) {
                 screenX: e.clientX,
                 screenY: e.clientY,
               })
-            : (n.onFurnitureMoved?.(r?.name ?? `furniture`), (k.comfort = Math.min(100, k.comfort + 2)));
+            : (n.onFurnitureMoved?.(r?.name ?? `furniture`), invalidatePaths());
         }
         Wn = null;
       }
@@ -29246,7 +29456,7 @@ function Gu(e, t, n) {
               screenX: e.clientX,
               screenY: e.clientY,
             }));
-        } else t && (oe(), n.onFurnitureMoved?.(t.name));
+        } else t && (oe(), n.onFurnitureMoved?.(t.name), invalidatePaths());
         ((Gn = null), (qn = null));
       }
       if (Yn) {
@@ -29669,45 +29879,13 @@ function Gu(e, t, n) {
             ((Te = `exit`), (z.targetPosition = { x: e.x, z: e.outsideZ }));
           } else
             B === `park` && Te === `exit`
-              ? (Oe.setGateOpen(!1),
-                (S.root.visible = !1),
-                gn(V),
-                (e = C.doorPosition),
-                (z.position = { x: e.outsideX, z: e.outsideZ }),
-                S.root.position.set(e.outsideX, 0, e.outsideZ),
-                (S.root.visible = !0),
-                (Te = `enter`),
-                (z.targetPosition = { x: e.insideX, z: e.insideZ }))
+              ? (Oe.setGateOpen(!1), (S.root.visible = !1), gn(V), arriveAt(V))
               : B === `market` && Te === `exit`
-                ? (W.setDoorOpen(!1),
-                  (S.root.visible = !1),
-                  gn(V),
-                  (e = C.doorPosition),
-                  (z.position = { x: e.outsideX, z: e.outsideZ }),
-                  S.root.position.set(e.outsideX, 0, e.outsideZ),
-                  (S.root.visible = !0),
-                  (Te = `enter`),
-                  (z.targetPosition = { x: e.insideX, z: e.insideZ }))
+                ? (W.setDoorOpen(!1), (S.root.visible = !1), gn(V), arriveAt(V))
                 : B === `arcade` && Te === `exit`
-                  ? (U.setDoorOpen(!1),
-                    (S.root.visible = !1),
-                    gn(V),
-                    (e = C.doorPosition),
-                    (z.position = { x: e.outsideX, z: e.outsideZ }),
-                    S.root.position.set(e.outsideX, 0, e.outsideZ),
-                    (S.root.visible = !0),
-                    (Te = `enter`),
-                    (z.targetPosition = { x: e.insideX, z: e.insideZ }))
+                  ? (U.setDoorOpen(!1), (S.root.visible = !1), gn(V), arriveAt(V))
                   : B === `store` && Te === `exit`
-                    ? (ke.setDoorOpen(!1),
-                      (S.root.visible = !1),
-                      gn(V),
-                      (e = C.doorPosition),
-                      (z.position = { x: e.outsideX, z: e.outsideZ }),
-                      S.root.position.set(e.outsideX, 0, e.outsideZ),
-                      (S.root.visible = !0),
-                      (Te = `enter`),
-                      (z.targetPosition = { x: e.insideX, z: e.insideZ }))
+                    ? (ke.setDoorOpen(!1), (S.root.visible = !1), gn(V), arriveAt(V))
                     : Te === `enter` &&
                       (H(B)
                         ? C.setDoorOpen(!1)
@@ -29715,13 +29893,19 @@ function Gu(e, t, n) {
                           ? Oe.setGateOpen(!1)
                           : B === `store`
                             ? ke.setDoorOpen(!1)
-                            : U.setDoorOpen(!1),
+                            : B === `market`
+                              ? W.setDoorOpen(!1)
+                              : U.setDoorOpen(!1),
                       Tn());
         } else if (
           z.currentAction !== `idle` &&
           z.currentAction !== `disposing` &&
           z.currentAction !== `traveling` &&
           z.currentAction !== `kidnapping` &&
+          // Scenes run their own timeline in sceneStep; they must not complete like a normal action.
+          !scene &&
+          z.currentAction !== `intimate` &&
+          z.currentAction !== `intimate_watch` &&
           !(z.currentAction === `working` && we) &&
           !d &&
           ((_e += t),
@@ -29921,7 +30105,7 @@ function Gu(e, t, n) {
           }),
           mt)
         ) {
-          let e = bt.children.find((e) => e.name === `body_root`);
+          let e = bt.children.find((e) => e.name === `body_root` && goreHere(e));
           if (e) {
             let t = z.position.x - Math.sin(z.facingAngle) * 0.45,
               n = z.position.z - Math.cos(z.facingAngle) * 0.45;
@@ -29972,7 +30156,7 @@ function Gu(e, t, n) {
           else {
             let t = Le.position.x,
               r = Le.position.z;
-            (xt.remove(Le),
+            (Hl(Le, new Set()),
               (Le = null),
               n.onRedFlash?.(),
               Ut(t, r),
@@ -30010,9 +30194,10 @@ function Gu(e, t, n) {
           else {
             (Pe.setNightWalker(!1), (Ke = p >= 20 || p < 6));
             let t = I.findIndex((e) => e.itemId === `kidnapping_kit`);
-            (t >= 0 && I.splice(t, 1), On(), Le && xt.remove(Le));
+            (t >= 0 && I.splice(t, 1), On(), Le && Hl(Le, new Set()));
             let r = e.config;
             ((Le = vu(r)),
+              (Le.userData.cfg = { name: r.name, skinColor: r.skinColor, shirtColor: r.shirtColor }),
               Le.position.set(-2.6, 0, 2.6),
               (Le.rotation.y = Math.PI * 0.75),
               xt.add(Le),
@@ -30039,7 +30224,8 @@ function Gu(e, t, n) {
             (sn(z.position.x, z.position.z) && nr(z.position.x, z.position.z), (Re += t), Re > 5 && ze <= 0)
           ) {
             ((Re = 0), (ze = 14));
-            let e = Qt();
+            // Needs-driven self care uses home furniture, so only do it at home.
+            let e = H(B) ? Qt() : null;
             if (e) $t(e);
             else if (Math.random() < 0.6) {
               let e = (Math.random() - 0.5) * 5,
@@ -30099,10 +30285,12 @@ function Gu(e, t, n) {
         (He &&
           typeof k.voices == `number` &&
           k.voices <= 0 &&
+          H(B) &&
+          !Te &&
           !ft &&
           !mt &&
           _t === null &&
-          dt.length < 6 &&
+          dt.filter((e) => (e.home ?? `apartment`) === De).length < 6 &&
           ((ft = !0),
           (pt = 0),
           n.onAudio?.({ name: `evil` }),
@@ -30233,7 +30421,7 @@ function Gu(e, t, n) {
             me = void 0,
             he = void 0,
             _e = 0,
-            ge = 0,
+            ge = 4,
             Re = 0,
             ze = 6,
             Be = 0,
@@ -30249,7 +30437,7 @@ function Gu(e, t, n) {
             x.dispose();
           xt.children.length > 0;
         )
-          xt.remove(xt.children[0]);
+          Hl(xt.children[0], new Set());
         sceneCancel();
         for (; G.children.length > 0; ) {
           const ch = G.children[0];
@@ -30264,13 +30452,25 @@ function Gu(e, t, n) {
           (toys = { mirror: !1, restraints: !1, camera: !1 }),
           (achievements = []),
           (datingPool = []));
-        (jn(), S.setSkiMask(at), n.onStateUpdate?.(z, A, j));
+        // Point the shared state at the fresh objects and show the home again if we restarted while away.
+        ((z.needs = k), (z.customization = O), jn(), gn(`apartment`), S.setSkiMask(at), n.onStateUpdate?.(z, A, j));
       },
       updateConfig(e) {
         Sr(e);
       },
       dispose() {
-        (xr.dispose(), x.dispose(), y.dispose(), s.dispose());
+        (engineTimers.forEach((e) => clearTimeout(e)),
+          engineTimers.clear(),
+          Zn !== null && (window.clearTimeout(Zn), (Zn = null)),
+          mcv?.remove(),
+          (mcv = null),
+          heartSprites?.forEach((e) => e.material.dispose()),
+          heartTex?.dispose(),
+          Nt.dispose(),
+          xr.dispose(),
+          x.dispose(),
+          y.dispose(),
+          s.dispose());
       },
       suggest(e) {
         if ((rr(), n.onAudio?.({ name: `click` }), e === `appease_voices` && !He))
@@ -30285,6 +30485,15 @@ function Gu(e, t, n) {
             n.onStateUpdate?.(z, A, j),
             { accepted: !1, message: `Evil Mode is off.` }
           );
+        if (!H(B))
+          return (
+            n.onAudio?.({ name: `refusal` }),
+            (z.thoughtBubble = { text: `I'll take care of that when I'm home. 🏠`, icon: `🏠`, timeLeft: 4, type: `neutral` }),
+            n.onStateUpdate?.(z, A, j),
+            { accepted: !1, message: `Head home first.` }
+          );
+        // Drop any job shift, kidnapping, body drag or scene first so their state can't linger.
+        (Te || we || Fe || mt || _t !== null || q !== null || scene) && _n();
         let t = Lu(e, z, I, re);
         return (
           t.accepted
@@ -30453,9 +30662,7 @@ function Gu(e, t, n) {
               { success: !0, message: `Ate a psilocybin mushroom!` });
       },
       sellToNpc(e, t) {
-        let r = ((Se?.npcs.some((t) => t.config.id === e) ?? !1) && Se ? Se : Pe).npcs.find(
-          (t) => t.config.id === e,
-        );
+        let r = [Se, Ce, Pe].map((t) => t?.npcs.find((t) => t.config.id === e)).find(Boolean);
         if (!r) return { success: !1, message: `Nobody is there.` };
         let i = t === `joint` ? 55 : t === `meth_baggie` ? 90 : t === `psilocybin_mushroom` ? 45 : 35,
           a = R[t] ?? 0;
@@ -30586,7 +30793,8 @@ function Gu(e, t, n) {
             jobCounts: { ...be },
             skiMaskWorn: at,
             bodies: dt.map((e) => ({ ...e })),
-            captive: Le ? { x: Le.position.x, z: Le.position.z } : void 0,
+            captive: Le ? { x: Le.position.x, z: Le.position.z, config: Le.userData.cfg } : void 0,
+            stats: { kills: ce.kills, kidnappings: ce.kidnappings, sold: { ...ce.sold }, bodies: ce.bodies.map((e) => ({ ...e })) },
             roommates: roommates.map((r) => ({
               id: r.id,
               name: r.name,
@@ -30610,6 +30818,7 @@ function Gu(e, t, n) {
               homePos: r.homePos,
               look: r.look,
               restLeft: r.restLeft || 0,
+              street: !!r._street,
             })),
             bills: { ...bills },
             stamina: sexStats.stamina,
@@ -30624,7 +30833,10 @@ function Gu(e, t, n) {
       loadSaveData(e) {
         if (!e || !e.customization) return;
         ((O = { ...e.customization }),
-          (k = { ...e.needs }),
+          (k = Object.assign(
+            { hunger: 75, energy: 85, hygiene: 70, fun: 60, comfort: 50 },
+            Object.fromEntries(Object.entries(e.needs || {}).filter(([, e]) => Number.isFinite(e))),
+          )),
           (A = Number(e.coins) || 0),
           (j = Number(e.happinessScore) || 0),
           Number.isFinite(e.timeOfDay) && (p = ((e.timeOfDay % 24) + 24) % 24));
@@ -30686,12 +30898,18 @@ function Gu(e, t, n) {
           (ce.kills = 0),
           (ce.bodies = []),
           (dt.length = 0));
-        for (; bt.children.length > 0; ) bt.remove(bt.children[0]);
-        ((e.bodies || []).forEach((e) => En(e.x, e.z)), (Le &&= (xt.remove(Le), null)));
+        for (; bt.children.length > 0; ) removeBody(bt.children[0]);
+        ((e.bodies || []).forEach((e) => En(e.x, e.z, void 0, e.home ?? `apartment`)),
+          syncHomeGore(),
+          (Le &&= (Hl(Le, new Set()), null)));
         let i = uu.find((e) => e.id === `night_walker`);
         (e.captive &&
           i &&
-          ((Le = vu(i)), Le.position.set(e.captive.x, 0, e.captive.z), xt.add(Le), (xt.visible = H(B))),
+          ((Le = vu(e.captive.config ?? i)),
+          (Le.userData.cfg = e.captive.config),
+          Le.position.set(e.captive.x, 0, e.captive.z),
+          xt.add(Le),
+          (xt.visible = H(B))),
           _n(),
           (Te = null),
           (we = null),
@@ -30707,7 +30925,15 @@ function Gu(e, t, n) {
           B === M
             ? (C.setWallColor((ue = ee[M])), C.setFloorType((de = te[M])), C.updateBoxes(re), On())
             : (gn(M), On()),
-          (z.position = { x: 0.4, z: 0.4 }));
+          (z.position = { x: 0.4, z: 0.4 }),
+          syncHomeGore());
+        // Restore lifetime stats (older saves only had the bodies, which were recounted above).
+        e.stats &&
+          ((ce.kills = Number(e.stats.kills) || ce.kills),
+          (ce.kidnappings = Number(e.stats.kidnappings) || 0),
+          (ce.sold = { ...ce.sold, ...(e.stats.sold || {}) }),
+          Array.isArray(e.stats.bodies) && (ce.bodies = e.stats.bodies.map((e) => ({ ...e }))),
+          le());
         if (e.bills) bills = { ...bills, ...e.bills };
         if (typeof e.stamina === `number`) sexStats.stamina = e.stamina;
         if (typeof e.heat === `number`) heat = e.heat;
@@ -30724,6 +30950,7 @@ function Gu(e, t, n) {
           K = null;
           n.onVisitorUpdate?.(null);
         }
+        lt && n.onVisitorUpdate?.(null);
         lt = null;
         ut.length = 0;
         roommates = Array.isArray(e.roommates)
@@ -30734,6 +30961,10 @@ function Gu(e, t, n) {
               workTimer: r.workTimer || 0,
               wage: r.wage || 40,
               homePos: r.homePos || { x: 1.2, z: -1.5 },
+              _street: !!r.street && !!r.atWork,
+              // Older saves could leave a roommate pregnant forever after the birth.
+              pregnant: !!r.pregnant && !(r.baby && (r.pregnancyProgress || 0) >= 12),
+              pregnancyProgress: r.baby && (r.pregnancyProgress || 0) >= 12 ? 0 : r.pregnancyProgress || 0,
             }))
           : [];
         Object.values(roommateMeshes).forEach((m) => {
@@ -31033,9 +31264,12 @@ function Gu(e, t, n) {
                 elapsed: 0,
               }),
               n.onAudio?.({ name: `click` }),
-              setTimeout(() => {
-                (C.moveBuiltinProp(t, r.obj.position.x, r.obj.position.z), oe());
-              }, 320),
+              ((e) => {
+                let n = setTimeout(() => {
+                  (engineTimers.delete(n), e.moveBuiltinProp(t, r.obj.position.x, r.obj.position.z), oe());
+                }, 320);
+                engineTimers.add(n);
+              })(C),
               !0);
         }
         let t = I.find((t) => t.uid === e);
@@ -31291,9 +31525,19 @@ function Gu(e, t, n) {
       getJobStats() {
         return { ...be };
       },
+      // Each play costs a token; payouts are capped per run so the arcade isn't a money printer.
+      arcadeInsertCoin() {
+        return A < ARCADE_TOKEN
+          ? ((z.thoughtBubble = { text: `Need $${ARCADE_TOKEN} for an arcade token. 🪙`, icon: `🪙`, timeLeft: 3.5, type: `negative` }),
+            n.onAudio?.({ name: `refusal` }),
+            n.onStateUpdate?.(z, A, j),
+            !1)
+          : ((A -= ARCADE_TOKEN), n.onAudio?.({ name: `click` }), n.onStateUpdate?.(z, A, j), !0);
+      },
       playArcadeGame(e) {
-        let t = Math.max(0, Math.floor(e)),
-          r = Math.min(120, Math.floor(t / 2));
+        let s = (Array.isArray(e) ? e : [e]).map((e) => Math.max(0, Math.floor(Number(e) || 0))),
+          t = s.reduce((e, t) => e + t, 0),
+          r = s.reduce((e, t) => e + Math.min(40, Math.floor(t / 3)), 0);
         return (
           (A += r),
           (k.fun = Math.min(100, k.fun + 10 + t / 40)),
@@ -31521,7 +31765,8 @@ function Gu(e, t, n) {
           }
         } else if (action === `record` && He) {
           msg = `You secretly record the moment. 📹 (evil)`;
-          A += onCd(`vrec`, 60) ? 0 : 40;
+          // The camera toy makes recordings worth more.
+          A += onCd(`vrec`, 60) ? 0 : toys.camera ? 60 : 40;
           aff = -5;
         } else if (action === `threesome` && jealous) {
           msg = `You pull the roommate in. Risky threesome. 🔥`;
@@ -31532,6 +31777,7 @@ function Gu(e, t, n) {
           });
         } else if (action === `movein`) {
           if (K.affinity < 35) return { success: !1, message: `Need more affinity (${K.affinity}/35)` };
+          scene && sceneCancel();
           if (roommates.find((r) => r.id === cfg.id)) return { success: !1, message: `Already lives here` };
           const job = getJobFor(cfg.id);
           const rm = {
@@ -31578,7 +31824,8 @@ function Gu(e, t, n) {
         } else return { success: !1, message: `Unknown` };
         k.fun = Math.min(100, (k.fun ?? 60) + fun);
         j += happy;
-        K && (K.affinity += aff);
+        // Repeating the same move right away doesn't build more affinity.
+        K && (K.affinity += aff > 0 && onCd(`vaff_${cfg.id}_${action}`, 10) ? 0 : aff);
         z.thoughtBubble = { text: msg, icon: `✨`, timeLeft: 4.5, type: `positive` };
         n.onStateUpdate?.(z, A, j);
         if (SCENE_ACTIONS.includes(action) && K && K.phase === `inRoom`) {
@@ -31594,8 +31841,18 @@ function Gu(e, t, n) {
         return { success: !0, message: msg };
       },
       roommateAction(id, action, extra) {
+        // Repeating the same action right away doesn't build more affinity (no instant-marriage spam).
+        const rm = roommates.find((r) => r.id === id),
+          before = rm?.affinity,
+          res = this.roommateActionRaw(id, action, extra);
+        rm && rm.affinity > before && onCd(`raff_${id}_${action}`, 10) && (rm.affinity = before);
+        return res;
+      },
+      roommateActionRaw(id, action, extra) {
         const rm = roommates.find((r) => r.id === id);
         if (!rm) return { success: !1, message: `Not found` };
+        // Don't leave a scene animating a partner who is leaving the house.
+        [`sendwork`, `kickout`, `divorce`].includes(action) && scene && sceneCancel();
         const name = rm.name;
         if (
           rm.jealousy > 40 &&
@@ -31676,8 +31933,6 @@ function Gu(e, t, n) {
         if (action === `sex`) {
           const pos = extra || `missionary`;
           const o = sexOutcome(rm.affinity, sexStats.stamina, pos);
-          if (toys.mirror) o.pleasure += 5;
-          if (toys.restraints && pos === `rough`) o.pleasure += 8;
           sexStats.stamina = Math.max(0, sexStats.stamina - o.stamCost);
           rm.sexCount = (rm.sexCount || 0) + 1;
           k.fun = Math.min(100, (k.fun ?? 60) + o.pleasure);
@@ -31724,10 +31979,10 @@ function Gu(e, t, n) {
         if (action === `record` && He) {
           const w = onCd(`rrec`, 60);
           if (w) return { success: !1, message: `Too soon. Wait ${w}s.` };
-          A += 50;
+          A += toys.camera ? 75 : 50;
           rm.affinity = Math.max(0, rm.affinity - 8);
           z.thoughtBubble = {
-            text: `Recorded ${name} (sold for $50).`,
+            text: `Recorded ${name} (sold for $${toys.camera ? 75 : 50}).`,
             icon: `📹`,
             timeLeft: 4,
             type: `negative`,
@@ -31802,6 +32057,7 @@ function Gu(e, t, n) {
         if (type === `text`) {
           const rm = roommates.find((r) => r.id === arg) || roommates[0];
           if (!rm) return { success: !1, message: `No one to text` };
+          if (onCd(`text_${rm.id}`, 15)) return { success: !1, message: `${rm.name} hasn't replied yet.` };
           const kinds = [`flirty`, `normal`, `mean`];
           const knd = kinds[Math.floor(Math.random() * 3)];
           if (knd === `flirty`) {
@@ -32148,72 +32404,80 @@ var Ku = (0, h.forwardRef)(function (
         };
       }, [t, n, r, i, a, o, s, c, l, u, d, f, p, m, v, y, b, x, S, C, w, T, E, D]),
       (0, h.useImperativeHandle)(O, () => ({
-        pause: () => A.current?.pause(),
-        resume: () => A.current?.resume(),
-        restart: () => A.current?.restart(),
-        suggest: (e) => A.current?.suggest(e) ?? { accepted: !1, message: `` },
-        buyFurniture: (e) => A.current?.buyFurniture(e) ?? !1,
-        unpackBox: (e) => A.current?.unpackBox(e),
-        getHeathenScreenCoords: () => A.current?.getHeathenScreenCoords() ?? { x: 0, y: 0, visible: !1 },
-        getState: () => A.current?.getState() ?? {},
-        loadSaveData: (e) => A.current?.loadSaveData(e),
-        exportSaveData: () => A.current?.exportSaveData() ?? {},
-        updateCustomization: (e) => A.current?.updateCustomization(e),
-        setEvilMode: (e) => A.current?.setEvilMode(e),
-        phoneAction: (e, t, n) => A.current?.phoneAction(e, t, n) ?? { success: !1, message: `` },
-        rotateFurniture: (e) => A.current?.rotateFurniture(e) ?? !1,
-        rotateWall: (e) => A.current?.rotateWall(e) ?? !1,
-        toggleLamp: (e) => A.current?.toggleLamp(e) ?? !1,
-        sellFurniture: (e) => A.current?.sellFurniture(e) ?? { success: !1, refund: 0 },
-        useFurniture: (e) => A.current?.useFurniture(e) ?? null,
-        interactWithNpc: (e, t) => A.current?.interactWithNpc(e, t) ?? null,
-        kidnapNightWalker: () => A.current?.kidnapNightWalker() ?? { success: !1, message: `` },
-        captiveAction: (e) => A.current?.captiveAction(e) ?? { success: !1, message: `` },
-        sitOnBench: (e) => A.current?.sitOnBench(e),
-        goHome: () => A.current?.goHome() ?? !1,
-        unstuck: () => A.current?.unstuck(),
-        isAwayFromHome: () => A.current?.isAwayFromHome() ?? !1,
-        getDwelling: () => A.current?.getDwelling() ?? `apartment`,
-        setDwelling: (e) => A.current?.setDwelling(e) ?? !1,
-        getDrugRequests: () => A.current?.getDrugRequests() ?? {},
-        markDrugRequestsRead: () => A.current?.markDrugRequestsRead(),
-        fulfillDrugRequest: (e) => A.current?.fulfillDrugRequest(e) ?? { success: !1, message: `` },
-        sendVisitorHome: () => A.current?.sendVisitorHome() ?? !1,
+        pause: () => A.current?.pause?.(),
+        resume: () => A.current?.resume?.(),
+        restart: () => A.current?.restart?.(),
+        suggest: (e) => A.current?.suggest?.(e) ?? { accepted: !1, message: `` },
+        buyFurniture: (e) => A.current?.buyFurniture?.(e) ?? !1,
+        unpackBox: (e) => A.current?.unpackBox?.(e),
+        getHeathenScreenCoords: () => A.current?.getHeathenScreenCoords?.() ?? { x: 0, y: 0, visible: !1 },
+        getState: () => A.current?.getState?.() ?? {},
+        loadSaveData: (e) => A.current?.loadSaveData?.(e),
+        exportSaveData: () => A.current?.exportSaveData?.() ?? {},
+        updateCustomization: (e) => A.current?.updateCustomization?.(e),
+        setEvilMode: (e) => A.current?.setEvilMode?.(e),
+        phoneAction: (e, t, n) => A.current?.phoneAction?.(e, t, n) ?? { success: !1, message: `` },
+        rotateFurniture: (e) => A.current?.rotateFurniture?.(e) ?? !1,
+        rotateWall: (e) => A.current?.rotateWall?.(e) ?? !1,
+        toggleLamp: (e) => A.current?.toggleLamp?.(e) ?? !1,
+        sellFurniture: (e) => A.current?.sellFurniture?.(e) ?? { success: !1, refund: 0 },
+        useFurniture: (e) => A.current?.useFurniture?.(e) ?? null,
+        interactWithNpc: (e, t) => A.current?.interactWithNpc?.(e, t) ?? null,
+        kidnapNightWalker: () => A.current?.kidnapNightWalker?.() ?? { success: !1, message: `` },
+        captiveAction: (e) => A.current?.captiveAction?.(e) ?? { success: !1, message: `` },
+        sitOnBench: (e) => A.current?.sitOnBench?.(e),
+        goHome: () => A.current?.goHome?.() ?? !1,
+        unstuck: () => A.current?.unstuck?.(),
+        isAwayFromHome: () => A.current?.isAwayFromHome?.() ?? !1,
+        getDwelling: () => A.current?.getDwelling?.() ?? `apartment`,
+        setDwelling: (e) => A.current?.setDwelling?.(e) ?? !1,
+        getDrugRequests: () => A.current?.getDrugRequests?.() ?? {},
+        markDrugRequestsRead: () => A.current?.markDrugRequestsRead?.(),
+        fulfillDrugRequest: (e) => A.current?.fulfillDrugRequest?.(e) ?? { success: !1, message: `` },
+        sendVisitorHome: () => A.current?.sendVisitorHome?.() ?? !1,
         visitorInteract: (e, x) => A.current?.visitorInteract?.(e, x) ?? { success: !1 },
         roommateAction: (id, act, x) => A.current?.roommateAction?.(id, act, x) ?? { success: !1 },
         getRoommates: () => A.current?.getRoommates?.() ?? [],
         lifeAction: (t, a) => A.current?.lifeAction?.(t, a) ?? { success: !1 },
-        getVisitor: () => A.current?.getVisitor() ?? null,
-        getClock: () => A.current?.getClock() ?? { hour: 8, minute: 0, isNight: !1 },
-        setTimeOfDay: (e) => A.current?.setTimeOfDay(e),
-        addCoins: (e) => A.current?.addCoins(e),
-        getJobStats: () => A.current?.getJobStats() ?? {},
-        playArcadeGame: (e) => A.current?.playArcadeGame(e) ?? { coins: 0 },
-        harvestPlant: (e) => A.current?.harvestPlant(e) ?? { success: !1, message: `` },
-        getInventory: () => A.current?.getInventory() ?? {},
-        rollJoints: (e) => A.current?.rollJoints(e) ?? { success: !1, message: `` },
-        smokeJoint: () => A.current?.smokeJoint() ?? { success: !1, message: `` },
-        smokeBong: () => A.current?.smokeBong() ?? { success: !1, message: `` },
-        eatMushroom: () => A.current?.eatMushroom() ?? { success: !1, message: `` },
-        sellToNpc: (e, t) => A.current?.sellToNpc(e, t) ?? { success: !1, message: `` },
-        cookMeth: (e) => A.current?.cookMeth(e) ?? { success: !1, message: `` },
+        getVisitor: () => A.current?.getVisitor?.() ?? null,
+        getClock: () => A.current?.getClock?.() ?? { hour: 8, minute: 0, isNight: !1 },
+        setTimeOfDay: (e) => A.current?.setTimeOfDay?.(e),
+        addCoins: (e) => A.current?.addCoins?.(e),
+        getJobStats: () => A.current?.getJobStats?.() ?? {},
+        playArcadeGame: (e) => A.current?.playArcadeGame?.(e) ?? { coins: 0 },
+        arcadeInsertCoin: () => A.current?.arcadeInsertCoin?.() ?? !1,
+        harvestPlant: (e) => A.current?.harvestPlant?.(e) ?? { success: !1, message: `` },
+        getInventory: () => A.current?.getInventory?.() ?? {},
+        rollJoints: (e) => A.current?.rollJoints?.(e) ?? { success: !1, message: `` },
+        smokeJoint: () => A.current?.smokeJoint?.() ?? { success: !1, message: `` },
+        smokeBong: () => A.current?.smokeBong?.() ?? { success: !1, message: `` },
+        eatMushroom: () => A.current?.eatMushroom?.() ?? { success: !1, message: `` },
+        sellToNpc: (e, t) => A.current?.sellToNpc?.(e, t) ?? { success: !1, message: `` },
+        cookMeth: (e) => A.current?.cookMeth?.(e) ?? { success: !1, message: `` },
         getStats: () =>
-          A.current?.getStats() ?? {
+          A.current?.getStats?.() ?? {
             kills: 0,
             bodies: [],
             kidnappings: 0,
             sold: { weed_baggie: 0, joint: 0, meth_baggie: 0, psilocybin_mushroom: 0 },
           },
-        buyFromVendor: (e) => A.current?.buyFromVendor(e) ?? { success: !1, message: `` },
-        placeInventoryFurniture: (e) => A.current?.placeInventoryFurniture(e) ?? { success: !1, message: `` },
-        getWallColor: () => A.current?.getWallColor() ?? `#faf5ee`,
-        toggleSkiMask: () => A.current?.toggleSkiMask() ?? null,
-        isSkiMaskWorn: () => A.current?.isSkiMaskWorn() ?? !1,
-        robVendor: () => A.current?.robVendor() ?? { success: !1, message: `` },
+        buyFromVendor: (e) => A.current?.buyFromVendor?.(e) ?? { success: !1, message: `` },
+        placeInventoryFurniture: (e) => A.current?.placeInventoryFurniture?.(e) ?? { success: !1, message: `` },
+        getWallColor: () => A.current?.getWallColor?.() ?? `#faf5ee`,
+        toggleSkiMask: () => A.current?.toggleSkiMask?.() ?? null,
+        isSkiMaskWorn: () => A.current?.isSkiMaskWorn?.() ?? !1,
+        robVendor: () => A.current?.robVendor?.() ?? { success: !1, message: `` },
       })),
       (0, h.useEffect)(() => {
         let e = k.current;
         if (!e) return;
+        // Overlay timers: a repeat trigger restarts the effect instead of being cut short by the old timer.
+        let ot = {},
+          pulse = (e, t, n, r) => {
+            (clearTimeout(ot[e]),
+              r ? (t(!1), requestAnimationFrame(() => t(!0))) : t(!0),
+              (ot[e] = window.setTimeout(() => t(!1), n)));
+          };
         let t = Gu(e, se.current, {
           onError: (e) => R.current.onError(e),
           onStateUpdate: (e, t, n) => R.current.onStateUpdate?.(e, t, n),
@@ -32226,13 +32490,13 @@ var Ku = (0, h.forwardRef)(function (
           onDrugSale: (e, t) => R.current.onDrugSale?.(e, t),
           onCaptiveTap: (e) => R.current.onCaptiveTap?.(e),
           onRedFlash: () => {
-            (I(!0), window.setTimeout(() => I(!1), 500));
+            pulse(`red`, I, 500);
           },
           onSmoke: () => {
-            (re(!0), window.setTimeout(() => re(!1), 14e3), R.current.onSmoke?.());
+            (pulse(`smoke`, re, 14e3, !0), R.current.onSmoke?.());
           },
           onTrippy: () => {
-            (ie(!0), window.setTimeout(() => ie(!1), 9e3));
+            pulse(`trippy`, ie, 9e3, !0);
           },
           onWallBubble: (e) => R.current.onWallBubble?.(e),
           onVisitorUpdate: (e) => R.current.onVisitorUpdate?.(e),
@@ -32247,27 +32511,19 @@ var Ku = (0, h.forwardRef)(function (
           onWallMenu: (e) => oe({ wallId: e.wallId, x: e.screenX, y: e.screenY }),
           onKidnap: () => R.current.onKidnap?.(),
           onVoicesCollapse: () => {
-            (M(!0), window.setTimeout(() => M(!1), 1700));
+            pulse(`collapse`, M, 1700);
           },
           onLevelChange: (e) => {
-            (ee(e !== (A.current?.getDwelling?.() ?? `apartment`)),
-              P(!0),
-              window.setTimeout(() => P(!1), 600),
-              R.current.onLevelChange?.(e));
+            (ee(e !== (A.current?.getDwelling?.() ?? `apartment`)), pulse(`level`, P, 600), R.current.onLevelChange?.(e));
           },
         });
+        // Dev-server only (stripped from production builds): lets tests drive the engine.
+        import.meta.env?.DEV && (window.__heathensEngine = t);
         return (
           (A.current = t),
           () => {
-            (t.dispose(), (A.current = null));
+            (Object.values(ot).forEach((e) => clearTimeout(e)), t.dispose(), (A.current = null));
           }
-        );
-      }, []),
-      (0, h.useEffect)(() => {
-        let e = () => A.current?.addCoins(1e3);
-        return (
-          window.addEventListener(`aippy:developer-add-money`, e),
-          () => window.removeEventListener(`aippy:developer-add-money`, e)
         );
       }, []),
       (0, h.useEffect)(() => {
@@ -32483,10 +32739,14 @@ var Ku = (0, h.forwardRef)(function (
     },
   ],
   Yu = ({ coins: e, canRob: t, robHint: n, onBuyFood: r, onRob: i, onClose: a }) => {
+    useEscape(a);
     let [o, s] = h.useState(null),
+      mt = h.useRef(0),
       c = (e) => {
-        (s(e), window.setTimeout(() => s(null), 2200));
+        // A newer message restarts the timer instead of being hidden early by an older one.
+        (s(e), clearTimeout(mt.current), (mt.current = window.setTimeout(() => s(null), 2200)));
       };
+    h.useEffect(() => () => clearTimeout(mt.current), []);
     return (0, g.jsx)(`div`, {
       className: `absolute inset-0 z-50 flex items-center justify-center bg-stone-950/70 backdrop-blur-sm`,
       children: (0, g.jsxs)(`div`, {
@@ -32536,7 +32796,10 @@ var Ku = (0, h.forwardRef)(function (
                     type: `button`,
                     disabled: !n,
                     onClick: () => {
-                      r(t.id) ? c(`${t.icon} ${t.name} — chowed down on the spot!`) : c(`Not enough coins!`);
+                      let n = r(t.id);
+                      n === !0 || n?.success
+                        ? c(`${t.icon} ${t.name} — chowed down on the spot!`)
+                        : c(n?.message || `Not enough coins!`);
                     },
                     className: `flex w-full items-center gap-2 rounded-xl border border-sky-500/30 bg-stone-800 p-2 text-left transition-all ${n ? `hover:bg-sky-500/90 hover:text-stone-950 active:scale-95` : `opacity-50`}`,
                     children: [
@@ -33158,21 +33421,26 @@ function toastLater(fn, ms) {
   clearTimeout(window.__heathensToastT);
   window.__heathensToastT = window.setTimeout(fn, ms);
 }
-function MosaicToggle() {
-  const [mo, setMo] = h.useState(() => {
+// Shared with the engine so toggling takes effect immediately, even mid-scene or without storage.
+var mosaicPref = {
+  on: (() => {
     try {
       return localStorage.getItem(`heathens_mosaic_v1`) !== `false`;
     } catch {
       return !0;
     }
-  });
+  })(),
+};
+function MosaicToggle() {
+  const [mo, setMo] = h.useState(mosaicPref.on);
   return h.createElement(
     `button`,
     {
       type: `button`,
+      "aria-pressed": mo,
       onClick: () => {
         const v = !mo;
-        setMo(v);
+        (setMo(v), (mosaicPref.on = v));
         try {
           localStorage.setItem(`heathens_mosaic_v1`, String(v));
         } catch {}
@@ -33186,15 +33454,14 @@ let _sfxCtx = null,
   _noiseBuf = null;
 function sfxCtx() {
   if (!_sfxCtx) {
-    const C = window.AudioContext || window.webkitAudioContext;
-    if (!C) return null;
-    _sfxCtx = new C();
+    _sfxCtx = getSharedAudioCtx();
+    if (!_sfxCtx) return null;
     const b = _sfxCtx.createBuffer(1, _sfxCtx.sampleRate, _sfxCtx.sampleRate),
       d = b.getChannelData(0);
     for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
     _noiseBuf = b;
   }
-  _sfxCtx.state === `suspended` && _sfxCtx.resume();
+  (_sfxCtx.state === `suspended` || _sfxCtx.state === `interrupted`) && _sfxCtx.resume().catch(() => {});
   return _sfxCtx;
 }
 function sfxNoise(ctx, vol, dur, type, f0, f1, q = 1, delay = 0) {
@@ -33288,7 +33555,17 @@ function sfxPlay(name, vol) {
       break;
   }
 }
+// Close a modal with the Escape key (keyboard players had no way out besides the close button).
+function useEscape(e) {
+  const t = h.useRef(e);
+  ((t.current = e),
+    h.useEffect(() => {
+      const e = (e) => e.key === `Escape` && t.current?.();
+      return (window.addEventListener(`keydown`, e), () => window.removeEventListener(`keydown`, e));
+    }, []));
+}
 function LifeDeck({ name, data, jobsNode, onClose, onOpenApps, act, roommateAct, invite, tabInit }) {
+  useEscape(onClose);
   const [tab, setTab] = h.useState(tabInit || `phone`);
   const E = h.createElement;
   const rms = data?.roommates || [],
@@ -33384,6 +33661,7 @@ function LifeDeck({ name, data, jobsNode, onClose, onOpenApps, act, roommateAct,
                 [`Utilities`, bill.util],
                 [`Groceries`, bill.food],
                 [`Roommates help`, -bill.contrib],
+                ...(bill.owed > 0 ? [[`Unpaid debt`, bill.owed]] : []),
               ].map(([l, v]) =>
                 E(
                   `div`,
@@ -33623,6 +33901,7 @@ var ud = ({
                         className: `ml-auto h-1.5 w-12 overflow-hidden rounded-full bg-stone-800`,
                         children: (0, g.jsx)(`div`, {
                           className: `h-full bg-amber-400 transition-all duration-200`,
+                          "data-hud-progress": ``,
                           style: { width: `${Math.round(t.actionProgress * 100)}%` },
                         }),
                       }),
@@ -33706,7 +33985,9 @@ var ud = ({
                   type: `button`,
                   onClick: m,
                   className: `rounded-xl bg-stone-800/90 p-2 text-xs font-semibold text-stone-200 hover:bg-stone-700 active:scale-95 transition-all border border-stone-700 backdrop-blur-md`,
-                  title: p ? `Play Music` : `Mute Music`,
+                  title: p ? `Unmute sound` : `Mute sound`,
+                  "aria-label": p ? `Unmute sound` : `Mute sound`,
+                  "aria-pressed": !!p,
                   children: p ? `🔇` : `🎵`,
                 }),
               ],
@@ -33934,6 +34215,7 @@ function fd({
   skiMaskWorn: s,
   onClose: c,
 }) {
+  useEscape(c);
   let [l, u] = (0, h.useState)(!1),
     [d, f] = (0, h.useState)(null),
     [p, m] = (0, h.useState)(1),
@@ -33953,7 +34235,8 @@ function fd({
     (f(e), m(1), v(null));
   }
   function E() {
-    let e = t(p),
+    // Supplies may have dropped since the count was picked.
+    let e = t(Math.max(1, Math.min(p, C))),
       n = typeof e == `object` && e ? e.message : `Rolled up! 🚬`;
     ((typeof e == `object` && e && !e.success) || f(null), v(n));
   }
@@ -34246,13 +34529,20 @@ var pd = 320,
           let t = r.getBoundingClientRect();
           s = Math.max(12, Math.min(308, ((e.clientX - t.left) / t.width) * pd));
         };
+        let kk = (e) => {
+          let t = keyDir(e),
+            n = t === `left` ? -1 : t === `right` ? 1 : 0;
+          n && (e.preventDefault(), (s = Math.max(12, Math.min(308, s + n * 36))));
+        };
         return (
           r.addEventListener(`pointerdown`, _),
           r.addEventListener(`pointermove`, _),
+          window.addEventListener(`keydown`, kk),
           () => {
             (cancelAnimationFrame(f),
               r.removeEventListener(`pointerdown`, _),
-              r.removeEventListener(`pointermove`, _));
+              r.removeEventListener(`pointermove`, _),
+              window.removeEventListener(`keydown`, kk));
           }
         );
       }, [e]),
@@ -34301,11 +34591,25 @@ var pd = 320,
     { x: 0, y: 1 },
     { x: 0, y: -1 },
   ],
+  // Keyboard support for the arcade minigames: arrows/WASD.
+  keyDir = (e) =>
+    ({ ArrowUp: `up`, w: `up`, ArrowDown: `down`, s: `down`, ArrowLeft: `left`, a: `left`, ArrowRight: `right`, d: `right` })[
+      e.key
+    ],
+  useDirKeys = (e) =>
+    (0, h.useEffect)(() => {
+      let t = (t) => {
+        let n = keyDir(t);
+        n && (t.preventDefault(), e.current(n));
+      };
+      return (window.addEventListener(`keydown`, t), () => window.removeEventListener(`keydown`, t));
+    }, []),
   Td = (e) => Math.abs(e - Math.round(e)) < 0.08,
   Ed = ({ onGameOver: e }) => {
     let t = (0, h.useRef)(null),
       n = (0, h.useRef)(null),
       r = (0, h.useRef)(() => {});
+    useDirKeys(r);
     (0, h.useEffect)(() => {
       let i = t.current,
         a = i?.getContext(`2d`);
@@ -34354,13 +34658,26 @@ var pd = 320,
         v = (e) => {
           if (!h) return;
           let t = Math.min(0.05, (e - m) / 1e3);
-          ((m = e),
-            Td(c.x) && Td(c.y)
-              ? ((c.x = Math.round(c.x)),
-                (c.y = Math.round(c.y)),
-                (l.x !== 0 || l.y !== 0) && !Cd(c.x + l.x, c.y + l.y) && (c.dir = l),
-                Cd(c.x + c.dir.x, c.y + c.dir.y) ? (c.dir = { x: 0, y: 0 }) : _(c, 4.6, t))
-              : _(c, 4.6, t));
+          m = e;
+          // Step the player cell-centre to cell-centre so queued turns are never skipped at low frame rates,
+          // and stop at walls instead of picking a random direction.
+          for (let e = 4.6 * t, n = 0; e > 1e-6 && n < 8; n++) {
+            if (
+              (l.x === -c.dir.x && l.y === -c.dir.y && (l.x !== 0 || l.y !== 0) && (c.dir = l),
+              Td(c.x) && Td(c.y))
+            ) {
+              ((c.x = Math.round(c.x)), (c.y = Math.round(c.y)));
+              ((l.x !== 0 || l.y !== 0) && !Cd(c.x + l.x, c.y + l.y) && (c.dir = l),
+                Cd(c.x + c.dir.x, c.y + c.dir.y) && (c.dir = { x: 0, y: 0 }));
+            }
+            if (c.dir.x === 0 && c.dir.y === 0) break;
+            let t = c.dir.x > 0 ? Math.ceil(c.x) - c.x : c.dir.x < 0 ? c.x - Math.floor(c.x) : 0,
+              r = c.dir.y > 0 ? Math.ceil(c.y) - c.y : c.dir.y < 0 ? c.y - Math.floor(c.y) : 0,
+              i = Math.max(t, r) || 1,
+              a = Math.min(e, i);
+            ((c.x += c.dir.x * a), (c.y += c.dir.y * a), (e -= a));
+            Math.abs(a - i) < 1e-6 && ((c.x = Math.round(c.x)), (c.y = Math.round(c.y)));
+          }
           let r = `${Math.round(c.x)},${Math.round(c.y)}`;
           o.has(r) &&
             (o.delete(r),
@@ -34527,7 +34844,8 @@ var pd = 320,
           },
           _ = (t) => {
             if (!m) return;
-            let r = Math.min(0.05, (t - p) / 1e3);
+            let r = Math.min(0.05, (t - p) / 1e3),
+              py = l.y;
             if (
               ((p = t),
               (o = s),
@@ -34537,19 +34855,23 @@ var pd = 320,
               l.x > 312 && ((l.x = 312), (l.vx = -Math.abs(l.vx))),
               (c += (l.x - c) * Math.min(1, r * 2.6)),
               (c = Math.max(kd / 2, Math.min(Dd - kd / 2, c))),
+              // Swept checks: the ball may cross a whole paddle band in one slow frame.
               l.vy > 0 &&
                 l.y > 366 &&
-                l.y < 386 &&
+                py < 386 &&
                 Math.abs(l.x - o) < 38 &&
-                ((l.vy = -Math.abs(l.vy) * 1.05),
-                (l.vx += (l.x - o) * 2.4),
+                ((l.y = 366),
+                (l.vy = -Math.min(900, Math.abs(l.vy) * 1.05)),
+                (l.vx = Math.max(-600, Math.min(600, l.vx + (l.x - o) * 2.4))),
                 (u += 1),
                 n.current && (n.current.textContent = String(u * 10))),
               l.vy < 0 &&
                 l.y < 34 &&
-                l.y > 14 &&
+                py > 14 &&
                 Math.abs(l.x - c) < 38 &&
-                ((l.y = 34), (l.vy = Math.abs(l.vy) * 1.05), (l.vx += (l.x - c) * 2)),
+                ((l.y = 34),
+                (l.vy = Math.min(900, Math.abs(l.vy) * 1.05)),
+                (l.vx = Math.max(-600, Math.min(600, l.vx + (l.x - c) * 2)))),
               l.y < -12 && h(),
               l.y > 412)
             ) {
@@ -34572,8 +34894,14 @@ var pd = 320,
           },
           x = () => {
             f = !1;
+          },
+          kk = (e) => {
+            let t = keyDir(e),
+              n = t === `left` ? -1 : t === `right` ? 1 : 0;
+            n && (e.preventDefault(), (s = Math.max(kd / 2, Math.min(Dd - kd / 2, s + n * 34))), (o = s));
           };
         return (
+          window.addEventListener(`keydown`, kk),
           r.addEventListener(`pointerdown`, y),
           window.addEventListener(`pointerdown`, y),
           window.addEventListener(`pointermove`, b),
@@ -34581,6 +34909,7 @@ var pd = 320,
           window.addEventListener(`pointercancel`, x),
           () => {
             (cancelAnimationFrame(d),
+              window.removeEventListener(`keydown`, kk),
               r.removeEventListener(`pointerdown`, y),
               window.removeEventListener(`pointerdown`, y),
               window.removeEventListener(`pointermove`, b),
@@ -34616,6 +34945,7 @@ var pd = 320,
       n = (0, h.useRef)(null),
       r = (0, h.useRef)(() => {}),
       [i, a] = (0, h.useState)(!1);
+    useDirKeys(r);
     return (
       (0, h.useEffect)(() => {
         let i = t.current,
@@ -34667,8 +34997,10 @@ var pd = 320,
           },
           v = () => {
             c = l;
-            let t = { x: s[0].x + c.x, y: s[0].y + c.y };
-            if (t.x < 0 || t.y < 0 || t.x >= jd || t.y >= jd || s.some((e) => e.x === t.x && e.y === t.y)) {
+            let t = { x: s[0].x + c.x, y: s[0].y + c.y },
+              // The tail moves out of the way this step unless we're about to eat.
+              r = t.x === u.x && t.y === u.y ? s : s.slice(0, -1);
+            if (t.x < 0 || t.y < 0 || t.x >= jd || t.y >= jd || r.some((e) => e.x === t.x && e.y === t.y)) {
               ((h = !1), a(!0), e(d));
               return;
             }
@@ -34778,11 +35110,12 @@ var pd = 320,
     },
   },
   Ld = (e) => `heathens_arcade_best_${e}`,
-  Rd = ({ machineName: e, game: t, onFinish: n }) => {
+  Rd = ({ machineName: e, game: t, onFinish: n, onInsertCoin: ic }) => {
     let [r, i] = (0, h.useState)(`play`),
       [a, o] = (0, h.useState)(0),
       [s, c] = (0, h.useState)(0),
-      [tot, setTot] = (0, h.useState)(0),
+      [tot, setTot] = (0, h.useState)([]),
+      [broke, setBroke] = (0, h.useState)(!1),
       [nb, setNb] = (0, h.useState)(!1),
       [l, u] = (0, h.useState)(() => {
         try {
@@ -34798,7 +35131,7 @@ var pd = 320,
           try {
             prev = Number(localStorage.getItem(Ld(t)) ?? 0);
           } catch {}
-          (o(e), setTot((x) => x + e), setNb(e > prev), u((n) => Math.max(n, e)));
+          (o(e), setTot((x) => [...x, e]), setNb(e > prev), u((n) => Math.max(n, e)));
           try {
             localStorage.setItem(Ld(t), String(Math.max(prev, e)));
           } catch {}
@@ -34807,9 +35140,10 @@ var pd = 320,
         [t],
       ),
       p = (0, h.useCallback)(() => {
-        (i(`play`), c((e) => e + 1));
-      }, []),
+        ic?.() !== !1 ? (setBroke(!1), i(`play`), c((e) => e + 1)) : setBroke(!0);
+      }, [ic]),
       m = t === `snake` ? Fd : t === `pong` ? Ad : t === `pacman` ? Ed : gd;
+    useEscape(() => n(tot));
     return (0, g.jsxs)(`div`, {
       className: `fixed inset-0 z-[70] flex flex-col items-center justify-center bg-stone-950/95 p-4 backdrop-blur-sm`,
       children: [
@@ -34859,7 +35193,9 @@ var pd = 320,
                     }),
                   (0, g.jsx)(`div`, {
                     className: `text-[10px] text-stone-400`,
-                    children: `The Heathen earns fun + tokens from your run!`,
+                    children: broke
+                      ? `Out of coins — you need $${ARCADE_TOKEN} for another token.`
+                      : `The Heathen earns fun + cash from each run! ($${ARCADE_TOKEN}/play)`,
                   }),
                   (0, g.jsx)(`button`, {
                     type: `button`,
@@ -34945,12 +35281,20 @@ function Vd({
   onInteract: o,
   onClose: s,
 }) {
-  let [c, l] = (0, h.useState)(!1);
+  let [c, l] = (0, h.useState)(!1),
+    // Keep the latest onClose without re-arming the outside-tap guard on every parent render.
+    sr = (0, h.useRef)(s),
+    mr = (0, h.useRef)(null),
+    [mh, setMh] = (0, h.useState)(0);
+  sr.current = s;
   if (
     ((0, h.useEffect)(() => {
       l(!1);
       let e = requestAnimationFrame(() => l(!0));
       return () => cancelAnimationFrame(e);
+    }, [e?.id]),
+    (0, h.useLayoutEffect)(() => {
+      mr.current && setMh(mr.current.offsetHeight);
     }, [e?.id]),
     (0, h.useEffect)(() => {
       if (!e) return;
@@ -34959,7 +35303,7 @@ function Vd({
           t = !0;
         }, 120),
         r = () => {
-          t && s();
+          t && sr.current();
         };
       return (
         window.addEventListener(`pointerdown`, r),
@@ -34967,7 +35311,7 @@ function Vd({
           (window.clearTimeout(n), window.removeEventListener(`pointerdown`, r));
         }
       );
-    }, [e, s]),
+    }, [e]),
     !e)
   )
     return null;
@@ -34975,8 +35319,10 @@ function Vd({
       typeof window < `u` && window.innerWidth < 640
         ? (window.innerWidth - Bd) / 2
         : Math.max(12, Math.min(window.innerWidth - Bd - 12, e.screenX - Bd / 2)),
-    d = Math.max(16, Math.min(window.innerHeight - 24, e.screenY - 140));
+    // Keep the whole menu (not just its top edge) on screen.
+    d = Math.max(16, Math.min(window.innerHeight - Math.max(24, mh + 8), e.screenY - 140));
   return (0, g.jsxs)(`div`, {
+    ref: mr,
     className: `npc-social-menu fixed z-50 flex max-h-[76vh] flex-col rounded-3xl border border-emerald-400/50 bg-stone-900/95 p-3.5 shadow-2xl backdrop-blur-md`,
     style: {
       left: u,
@@ -35019,7 +35365,6 @@ function Vd({
             type: `button`,
             onClick: s,
             className: `absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full text-stone-400 hover:bg-stone-800 hover:text-stone-200 active:scale-95 text-xs`,
-            "aria-label": `Close`,
             "aria-label": `Close`,
             children: `✕`,
           }),
@@ -35856,7 +36201,35 @@ function _f(e) {
     } else (console.warn(`Vibration not supported in this environment`), t());
   });
 }
-var vf = ({ evilMode: e, onToggleEvil: t, onOpenSaveLoad: n, onOpenDevMode: r, onResume: i, onRestart: a }) =>
+// In-game settings (volume / speed), so they work outside the host's tweaks panel too.
+var settingSlider = (e, t, n, r, i, a, o) =>
+  (0, g.jsxs)(`label`, {
+    style: { display: `flex`, alignItems: `center`, gap: 10, fontSize: 12, color: `#d6d3d1`, fontWeight: 600 },
+    children: [
+      (0, g.jsx)(`span`, { style: { width: 104 }, children: e }),
+      (0, g.jsx)(`input`, {
+        type: `range`,
+        min: n,
+        max: r,
+        step: i,
+        value: t,
+        "aria-label": e,
+        onChange: (e) => a(Number(e.target.value)),
+        style: { flex: 1, accentColor: `#10b981` },
+      }),
+      (0, g.jsx)(`span`, { style: { width: 38, textAlign: `right` }, children: o(t) }),
+    ],
+  });
+var vf = ({
+  evilMode: e,
+  onToggleEvil: t,
+  onOpenSaveLoad: n,
+  onOpenDevMode: r,
+  onResume: i,
+  onRestart: a,
+  settings: st,
+  onSettings: so,
+}) =>
     (0, g.jsx)(`div`, {
       className: `absolute inset-0 z-50 flex items-center justify-center bg-stone-950/70 backdrop-blur-md p-4`,
       children: (0, g.jsxs)(`div`, {
@@ -35878,6 +36251,14 @@ var vf = ({ evilMode: e, onToggleEvil: t, onOpenSaveLoad: n, onOpenDevMode: r, o
                 className: `w-full rounded-2xl bg-emerald-500 px-4 py-3 text-base font-bold text-stone-950 shadow-lg active:scale-95 transition-all`,
                 children: `▶️ Resume`,
               }),
+              st &&
+                (0, g.jsxs)(`div`, {
+                  style: { display: `flex`, flexDirection: `column`, gap: 8, padding: `4px 2px` },
+                  children: [
+                    settingSlider(`🔊 Volume`, st.soundVolume, 0, 1, 0.1, (e) => so({ soundVolume: e }), (e) => `${Math.round(e * 100)}%`),
+                    settingSlider(`⏩ Game speed`, st.gameSpeed, 0.5, 2.5, 0.5, (e) => so({ gameSpeed: e }), (e) => `${e}×`),
+                  ],
+                }),
               (0, g.jsxs)(`div`, {
                 className: `flex items-stretch gap-2`,
                 children: [
@@ -36151,7 +36532,7 @@ var vf = ({ evilMode: e, onToggleEvil: t, onOpenSaveLoad: n, onOpenDevMode: r, o
                           let t = decodeURIComponent(escape(atob(e)));
                           r = JSON.parse(t);
                         }
-                        if (!r.customization || !r.needs) throw Error(`Invalid save data format.`);
+                        if (!isValidSave(r)) throw Error(`Invalid save data format.`);
                         (t(r), n());
                       } catch {
                         c(`Invalid or corrupted save string. Please verify the code.`);
@@ -36471,8 +36852,9 @@ var Tf = [
       _ === `messages` && u();
     }, [_, u]),
       (0, h.useEffect)(() => {
-        p();
-      }, [p]));
+        p?.();
+        // Only on open: callers pass inline functions.
+      }, []));
     let k = _ === `home` || ((_ === `darkweb` || _ === `stats`) && !r) ? null : _,
       A = [
         ...(i.includes(`apartment2`)
@@ -37675,7 +38057,7 @@ var Tf = [
     });
   },
   Ff = u.IMAGE_KSFU,
-  If = ({ x: e, y: t, visible: n, text: r, icon: i = `💭`, type: a = `positive` }) => {
+  If = ({ x: e, y: t, visible: n, text: r, icon: i = `💭`, type: a = `positive`, posRef: pr }) => {
     if (!n || !r) return null;
     let o =
       a === `negative`
@@ -37684,6 +38066,7 @@ var Tf = [
           ? `border-amber-400 bg-amber-50/95 text-amber-900 animate-bounce`
           : `border-sky-300 bg-white/95 text-slate-800`;
     return (0, g.jsx)(`div`, {
+      ref: pr,
       className: `pointer-events-none absolute z-20 transition-all duration-300 ease-out`,
       style: { left: `${e}px`, top: `${t}px`, transform: `translate(-50%, -100%)` },
       children: (0, g.jsxs)(`div`, {
@@ -37808,9 +38191,12 @@ var Tf = [
     onClose: a,
   }) => {
     let [o, s] = h.useState(null),
+      mt = h.useRef(0),
       c = (e) => {
-        (s(e), window.setTimeout(() => s(null), 2200));
+        // A newer message restarts the timer instead of being hidden early by an older one.
+        (s(e), clearTimeout(mt.current), (mt.current = window.setTimeout(() => s(null), 2200)));
       };
+    h.useEffect(() => () => clearTimeout(mt.current), []);
     return (0, g.jsx)(`div`, {
       className: `absolute inset-0 z-50 flex items-center justify-center bg-stone-950/70 backdrop-blur-sm`,
       children: (0, g.jsxs)(`div`, {
@@ -38272,18 +38658,31 @@ function Xf(e, t = {}) {
   let S = Object.assign(e, { unlock: b, cleanup: x, isPatched: !0, originalDestination: h });
   return (u(S), p(), Yf.add(e), S);
 }
+// One native AudioContext for music, Tone.js and SFX (iOS limits contexts, and one unlock covers all).
+var sharedNativeCtx = null;
+function getSharedAudioCtx() {
+  if (!sharedNativeCtx) {
+    let e = window.AudioContext || window.webkitAudioContext;
+    if (!e) return null;
+    sharedNativeCtx = new e();
+  }
+  return sharedNativeCtx;
+}
 function Zf(e = {}) {
   let { autoUnlock: t = !0, ...n } = e,
     [r, i] = (0, h.useState)(null),
     [a, o] = (0, h.useState)(!1),
     s = (0, h.useRef)(null);
   ((0, h.useEffect)(() => {
-    let e = Xf(new AudioContext(), n);
+    let e = getSharedAudioCtx();
+    if (!e) return;
+    e = Xf(e, n);
     return (
       (s.current = e),
       i(e),
       () => {
-        ((s.current = null), e.cleanup(), e.close());
+        // The context is shared, so only drop this hook's listeners.
+        ((s.current = null), e.cleanup?.());
       }
     );
   }, []),
@@ -38429,7 +38828,19 @@ function Qf(e, t = {}) {
       },
       [],
     ),
-    { play: v, stop: g, stopAll: _, isReady: !!a && o, audioContext: a, unlock: s, getAudioContext: c }
+    {
+      play: v,
+      stop: g,
+      stopAll: _,
+      setVolume: (e, t) => {
+        let n = d.current.get(e);
+        n && (n.gain.gain.value = t * p.current);
+      },
+      isReady: !!a && o,
+      audioContext: a,
+      unlock: s,
+      getAudioContext: c,
+    }
   );
 }
 async function $f(e, t) {
@@ -38448,9 +38859,10 @@ function ep(e, t) {
     console.warn(`[Aippy Leaderboard] Failed to send game event:`, e);
   }
 }
+var tpLast;
 function tp(e) {
-  (ep({ type: `score`, score: e, url: window.location.href }, `leaderboard.updateScore`),
-    console.log(`[Aippy Leaderboard] Score updated: ${e}, URL: ${window.location.href}`));
+  // Only notify the host when the score actually changes.
+  e !== tpLast && ((tpLast = e), ep({ type: `score`, score: e, url: window.location.href }, `leaderboard.updateScore`));
 }
 var np = Object.defineProperty,
   rp = (e, t, n) =>
@@ -50130,7 +50542,14 @@ dC.buses = new Map();
 function fC() {
   return zx().now();
 }
-(zx().transport, zx().destination, zx().destination, zx().listener, zx().draw, zx());
+// Point Tone.js at the shared AudioContext instead of letting it create its own.
+(getSharedAudioCtx() && Bx(getSharedAudioCtx()),
+  zx().transport,
+  zx().destination,
+  zx().destination,
+  zx().listener,
+  zx().draw,
+  zx());
 var pC = u.AUDIO_CTFN,
   mC = u.AUDIO_MNXN,
   hC = u.AUDIO_TJCE,
@@ -50143,6 +50562,20 @@ var pC = u.AUDIO_CTFN,
   SC = `heathens_phone_friends_v1`,
   CC = `heathens_tutorial_done_v1`,
   wC = 4;
+// Structural check for save data before handing it to the engine (a half-applied load gets autosaved).
+function isValidSave(e) {
+  let t = (e) => e && typeof e == `object` && !Array.isArray(e);
+  return !(
+    !t(e) ||
+    !t(e.customization) ||
+    !t(e.needs) ||
+    Object.values(e.needs).some((e) => typeof e != `number` || !Number.isFinite(e)) ||
+    (e.coins !== void 0 && !Number.isFinite(Number(e.coins))) ||
+    [`customization`].some((n) => Object.values(e[n]).some((e) => t(e))) ||
+    [`roommates`, `boxes`, `placedFurniture`, `achievements`].some((t) => e[t] !== void 0 && !Array.isArray(e[t]))
+  );
+}
+var SAVE_BACKUP_KEY = `heathens_studio_save_v1_corrupt`;
 function TC(e, t) {
   try {
     let t = localStorage.getItem(e);
@@ -50168,10 +50601,14 @@ var DC = {
   OC = () => {
     let e = _C.backgroundColor.useState(),
       t = Number(_C.pixelRatio.useState()),
-      n = Number(_C.gameSpeed.useState()),
+      tweakSpeed = Number(_C.gameSpeed.useState()),
       r = _C.ambientWarmth.useState(),
-      i = Number(_C.soundVolume.useState()),
-      { play: a, stop: o } = Qf({ bgm: pC, heartbeat: mC, static: hC, scream: gC }, { preload: !0 }),
+      tweakVolume = Number(_C.soundVolume.useState()),
+      // Settings chosen in the pause menu win over the host's tweak defaults.
+      [userCfg, setUserCfg] = (0, h.useState)(() => TC(`heathens_settings_v1`, {})),
+      n = Number.isFinite(userCfg.gameSpeed) ? userCfg.gameSpeed : tweakSpeed,
+      i = Number.isFinite(userCfg.soundVolume) ? userCfg.soundVolume : tweakVolume,
+      { play: a, stop: o, setVolume: sv } = Qf({ bgm: pC, heartbeat: mC, static: hC, scream: gC }, { preload: !0 }),
       { getAudioContext: s, unlock: c } = Zf(),
       l = (0, h.useRef)(null),
       u = (0, h.useRef)(0),
@@ -50206,7 +50643,8 @@ var DC = {
       [ge, _e] = (0, h.useState)(`apartment`),
       ve = (0, h.useCallback)(() => {
         let e = m.current?.getDrugRequests?.();
-        (e && he(e), _e(m.current?.getDwelling?.() ?? `apartment`));
+        // Keep the old object when nothing changed so the 4s poll doesn't re-render the app.
+        (e && he((t) => (JSON.stringify(t) === JSON.stringify(e) ? t : e)), _e(m.current?.getDwelling?.() ?? `apartment`));
       }, []);
     (0, h.useEffect)(() => {
       let e = window.setInterval(ve, 4e3);
@@ -50291,10 +50729,27 @@ var DC = {
         { id: `box_bedding`, title: `Warm Blankets & Towels`, x: 2.2, z: -2, unpacked: !1, rewardCoins: 85 },
         { id: `box_gear`, title: `Gadgets & Savings Jar`, x: 1.8, z: 1.8, unpacked: !1, rewardCoins: 120 },
       ]),
-      [pt, mt] = (0, h.useState)({ x: 0, y: 0, visible: !1 });
+      bubbleEl = (0, h.useRef)(null),
+      pt = st.thoughtBubble && m.current ? m.current.getHeathenScreenCoords() : { x: 0, y: 0, visible: !1 };
     ((0, h.useEffect)(() => {
       EC(xC, ze);
     }, [ze]),
+      (0, h.useEffect)(() => {
+        sv(`bgm`, i * 0.4);
+      }, [i]),
+      (0, h.useEffect)(() => {
+        // Flush the debounced autosave when the tab is hidden or closed.
+        let e = () => document.visibilityState === `hidden` && persistNow(),
+          t = () => persistNow();
+        return (
+          document.addEventListener(`visibilitychange`, e),
+          window.addEventListener(`pagehide`, t),
+          () => {
+            (document.removeEventListener(`visibilitychange`, e), window.removeEventListener(`pagehide`, t));
+          }
+        );
+        // persistNow is stable (declared further down, so it can't be listed as a dependency here).
+      }, []),
       (0, h.useEffect)(() => {
         EC(SC, Ve);
       }, [Ve]),
@@ -50333,7 +50788,8 @@ var DC = {
           let e = s();
           return e
             ? (await c(),
-              Bx(e),
+              // Only wrap the context for Tone.js once; a new Tone Context per sound leaked a Worker each time.
+              zx().rawContext !== e && Bx(e),
               await Vx(),
               (l.current ||= new nC({
                 oscillator: { type: `sine` },
@@ -50349,8 +50805,11 @@ var DC = {
         if (!(d.current || f)) {
           d.current = !0;
           try {
-            await a(`bgm`, { loop: !0, volume: i * 0.4 });
-          } catch {}
+            // play() resolves to null when the track fails to load; allow a retry on the next gesture.
+            (await a(`bgm`, { loop: !0, volume: i * 0.4 })) || (d.current = !1);
+          } catch {
+            d.current = !1;
+          }
         }
       }, [a, f, i]),
       _t = (0, h.useCallback)(() => {
@@ -50418,22 +50877,39 @@ var DC = {
         },
         [ht, f, a, i],
       ),
+      // Autosave: debounced, because state updates arrive every few seconds and a save serializes three homes.
+      saveTimer = (0, h.useRef)(null),
+      loadTimer = (0, h.useRef)(null),
+      saveWarned = (0, h.useRef)(!1),
+      persistNow = (0, h.useCallback)(() => {
+        if ((saveTimer.current && (clearTimeout(saveTimer.current), (saveTimer.current = null)), !Me.current)) return;
+        try {
+          let e = m.current?.exportSaveData();
+          e && e.customization && localStorage.setItem(yC, JSON.stringify(e));
+        } catch {
+          saveWarned.current ||
+            ((saveWarned.current = !0),
+            U(`Couldn't save your progress (storage full or blocked).`),
+            toastLater(() => U(null), 5e3));
+        }
+      }, []),
+      scheduleSave = (0, h.useCallback)(() => {
+        saveTimer.current || (saveTimer.current = window.setTimeout(persistNow, 4e3));
+      }, [persistNow]),
       vt = (0, h.useCallback)((e, t, n) => {
         (ct({ ...e }), K(t), ut(n));
         let r = m.current?.getJobStats();
         if (r) {
+          let n = !1;
           for (let [e, t] of Object.entries(r))
-            if (t > (Ne.current[e] ?? t)) {
-              let n = Cu(e);
-              n && Du(t) && Je({ listing: n, rank: wu(t) });
-            }
-          ((Ne.current = r), Ke(r));
+            (t !== Ne.current[e] && (n = !0),
+              t > (Ne.current[e] ?? t) && (() => {
+                let n = Cu(e);
+                n && Du(t) && Je({ listing: n, rank: wu(t) });
+              })());
+          (n || Object.keys(r).length !== Object.keys(Ne.current).length) && ((Ne.current = r), Ke(r));
         }
-        if ((tp(n), Me.current))
-          try {
-            let e = m.current?.exportSaveData();
-            e && e.customization && localStorage.setItem(yC, JSON.stringify(e));
-          } catch {}
+        (tp(n), scheduleSave());
       }, []),
       yt = (0, h.useCallback)((e) => {
         ue(e);
@@ -50466,11 +50942,7 @@ var DC = {
           : `You have the mask on, but need a Handgun in your bag. Check the Dark Web. 🔫`
         : `Equip your Ski Mask first (inventory 🥸). Wearing it makes Barnaby very nervous.`,
       Et = (0, h.useCallback)((e) => {
-        if ((_f(15), Me.current))
-          try {
-            let e = m.current?.exportSaveData();
-            e && e.customization && localStorage.setItem(yC, JSON.stringify(e));
-          } catch {}
+        (_f(15), scheduleSave());
       }, []),
       Dt = (0, h.useCallback)((e) => {
         (_f(10),
@@ -50582,7 +51054,8 @@ var DC = {
         [gt],
       ),
       Lt = (0, h.useCallback)((e) => {
-        (ot(null), e > 0 && (m.current?.playArcadeGame(e), _f(30)));
+        // Resume the 3D scene that was paused while the minigame overlay was up.
+        (ot(null), m.current?.resume(), e.some((e) => e > 0) && (m.current?.playArcadeGame(e), _f(30)));
       }, []),
       Rt = (0, h.useCallback)(() => {
         W && (m.current?.rotateFurniture(W.uid), ke(null));
@@ -50673,31 +51146,50 @@ var DC = {
       try {
         let e = localStorage.getItem(yC);
         if (e) {
-          let t = JSON.parse(e);
-          if (t && t.customization) {
+          // Keep a copy of a save we can't use instead of letting autosave overwrite it.
+          let bad = () => {
+            try {
+              localStorage.setItem(SAVE_BACKUP_KEY, e);
+            } catch {}
+            (U(`Your save couldn't be loaded. A backup copy was kept.`), toastLater(() => U(null), 5e3));
+          };
+          let t;
+          try {
+            t = JSON.parse(e);
+          } catch {
+            bad();
+          }
+          if (t && isValidSave(t)) {
             T(!1);
             let tries = 0;
             const go = () => {
+              loadTimer.current = null;
               if (!m.current?.exportSaveData?.()?.customization && tries++ < 60) {
-                window.setTimeout(go, 150);
+                loadTimer.current = window.setTimeout(go, 150);
                 return;
               }
-              (m.current?.loadSaveData(t),
-                (Me.current = !0),
-                Array.isArray(t.ownedProperties) &&
-                  t.ownedProperties.length > 0 &&
-                  z(t.ownedProperties.map((e) => (e === `two_bed` ? `apartment2` : e))),
-                R(m.current?.isSkiMaskWorn() ?? !1));
-              const gs = m.current?.getState?.();
-              gs?.boxes && ft([...gs.boxes]);
-              ve();
+              try {
+                (m.current?.loadSaveData(t),
+                  Array.isArray(t.ownedProperties) &&
+                    t.ownedProperties.length > 0 &&
+                    z(t.ownedProperties.map((e) => (e === `two_bed` ? `apartment2` : e))),
+                  R(m.current?.isSkiMaskWorn() ?? !1),
+                  (Ne.current = m.current?.getJobStats?.() ?? {}));
+                const gs = m.current?.getState?.();
+                (gs?.boxes && ft([...gs.boxes]), ve());
+              } catch (err) {
+                (console.warn(err), bad(), m.current?.restart(), C(!0));
+              }
+              Me.current = !0;
             };
-            setTimeout(go, 300);
+            loadTimer.current = window.setTimeout(go, 300);
             return;
           }
+          t && bad();
         }
       } catch {}
       ((Me.current = !0), C(!0));
+      return () => loadTimer.current && clearTimeout(loadTimer.current);
     }, [ve]),
       (0, h.useEffect)(() => {
         m.current?.setEvilMode(Te);
@@ -50705,10 +51197,18 @@ var DC = {
       (0, h.useEffect)(() => {
         let e,
           t = ``,
+          progEl = null,
           n = () => {
             if (m.current) {
-              let e = m.current.getHeathenScreenCoords();
-              mt(e);
+              // The action progress bar is also driven from here so it moves smoothly.
+              (progEl?.isConnected || (progEl = document.querySelector(`[data-hud-progress]`)),
+                progEl && (progEl.style.width = `${Math.round((m.current.getState().state?.actionProgress ?? 0) * 100)}%`));
+              // Move the thought bubble directly instead of re-rendering the whole app every frame.
+              let e = bubbleEl.current;
+              if (e) {
+                let t = m.current.getHeathenScreenCoords();
+                ((e.style.left = `${t.x}px`), (e.style.top = `${t.y}px`), (e.style.visibility = t.visible ? `` : `hidden`));
+              }
               let n = m.current.getClock();
               if (n && _.current) {
                 let e = String(n.hour).padStart(2, `0`),
@@ -50871,11 +51371,13 @@ var DC = {
           }),
           Ee(!1),
           V(!0));
+        loadTimer.current && (clearTimeout(loadTimer.current), (loadTimer.current = null));
         try {
           (localStorage.removeItem(yC),
             localStorage.removeItem(xC),
             localStorage.removeItem(SC),
-            localStorage.removeItem(bC));
+            // Evil mode is reset to off and the chooser stays dismissed, so persist that choice.
+            localStorage.setItem(bC, `false`));
         } catch {}
         ((Me.current = !0), o(`bgm`), (d.current = !1), m.current?.setEvilMode(!1), m.current?.restart());
         let e = m.current?.getState();
@@ -50885,8 +51387,17 @@ var DC = {
         (gt(), m.current?.updateCustomization(e), ct((t) => ({ ...t, customization: e })), C(!1), T(!1));
       },
       un = (e) => {
+        // Roll back to the current game if the import fails part-way through.
+        let prev = m.current?.exportSaveData();
+        try {
+          m.current?.loadSaveData(e);
+        } catch (err) {
+          throw (prev?.customization && m.current?.loadSaveData(prev), err);
+        }
+        (Be(e.npcReputation && typeof e.npcReputation == `object` ? e.npcReputation : {}),
+          He(Array.isArray(e.phoneFriends) ? e.phoneFriends : []),
+          (Ne.current = m.current?.getJobStats?.() ?? {}));
         (gt(),
-          m.current?.loadSaveData(e),
           ct((t) => ({ ...t, customization: e.customization, needs: e.needs })),
           K(e.coins),
           ut(e.happinessScore),
@@ -50902,8 +51413,10 @@ var DC = {
       },
       dn = (0, h.useMemo)(
         () =>
-          m.current
-            ? m.current.exportSaveData()
+          !O
+            ? null
+            : m.current
+            ? { ...m.current.exportSaveData(), npcReputation: ze, phoneFriends: Ve }
             : {
                 version: 1,
                 timestamp: Date.now(),
@@ -50917,7 +51430,7 @@ var DC = {
                 boxes: dt,
                 inventory: le,
               },
-        [st, G, lt, dt, le, O],
+        [st, G, lt, dt, le, O, ze, Ve],
       ),
       fn = (0, h.useCallback)(() => {
         (k(!1), on());
@@ -50959,9 +51472,10 @@ var DC = {
         }),
         st.thoughtBubble &&
           (0, g.jsx)(If, {
+            posRef: bubbleEl,
             x: pt.x,
             y: pt.y,
-            visible: pt.visible,
+            visible: !0,
             text: st.thoughtBubble.text,
             icon: st.thoughtBubble.icon,
             type: st.thoughtBubble.type,
@@ -51391,11 +51905,19 @@ var DC = {
           (0, g.jsx)(qu, {
             menu: rt,
             onPlay: () => {
-              rt && (ot({ machineName: rt.machineName, game: rt.game }), it(null));
+              rt &&
+                (m.current?.arcadeInsertCoin?.() && (m.current?.pause(), ot({ machineName: rt.machineName, game: rt.game })),
+                it(null));
             },
             onClose: () => it(null),
           }),
-        at && (0, g.jsx)(Rd, { machineName: at.machineName, game: at.game, onFinish: Lt }),
+        at &&
+          (0, g.jsx)(Rd, {
+            machineName: at.machineName,
+            game: at.game,
+            onFinish: Lt,
+            onInsertCoin: () => m.current?.arcadeInsertCoin?.() ?? !1,
+          }),
         E && (0, g.jsx)(Pf, { coins: G, evilMode: Te, onBuy: qt, onClose: () => D(!1) }),
         I &&
           (0, g.jsx)(Bf, {
@@ -51411,7 +51933,11 @@ var DC = {
             coins: G,
             canRob: wt,
             robHint: Tt,
-            onBuyFood: Jt,
+            onBuyFood: (e) => {
+              gt();
+              let t = m.current?.buyFromVendor(e);
+              return (t?.success && _f(25), t ?? { success: !1, message: `` });
+            },
             onRob: Ct,
             onClose: () => ae(!1),
           }),
@@ -51482,6 +52008,12 @@ var DC = {
             },
             onResume: on,
             onRestart: () => Se(!0),
+            settings: { soundVolume: i, gameSpeed: n },
+            onSettings: (e) =>
+              setUserCfg((t) => {
+                let n = { ...t, ...e };
+                return (EC(`heathens_settings_v1`, n), n);
+              }),
           }),
         A &&
           (0, g.jsx)(yf, {
