@@ -782,3 +782,20 @@ button[class*="fixed bottom-24 left-1/2"] { bottom: calc(env(safe-area-inset-bot
 }
 
 .scale-115 { transform: scale(1.15); }
+
+/* Missing utilities + larger hit areas */
+.active\:scale-98:active { transform: scale(.98); }
+.backdrop-blur-xs { backdrop-filter: blur(2px); }
+.focus\:outline-hidden:focus { outline: 2px solid transparent; outline-offset: 2px; }
+button.h-5.w-5.rounded-full { position: relative; }
+button.h-5.w-5.rounded-full::after { content: ""; position: absolute; inset: -6px; }
+@keyframes creepy-flicker {
+  0%, 100% { filter: none; opacity: 1; }
+  45% { filter: drop-shadow(0 0 6px rgba(255,40,40,.65)); }
+  50% { opacity: .78; }
+  55% { filter: drop-shadow(0 0 10px rgba(255,40,40,.9)); opacity: 1; }
+}
+.creepy-row { animation: creepy-flicker 3.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .creepy-row { animation: none; } }
+button[class*="-translate-x-1/2"][class*="-translate-y-full"][aria-label] { position: absolute; }
+button[class*="-translate-x-1/2"][class*="-translate-y-full"][aria-label]::after { content: ""; position: absolute; inset: -10px; }
