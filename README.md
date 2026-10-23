@@ -9,6 +9,12 @@ Browser-based 3D life sim.
 - Tap a **need bar** (Hunger, Energy, Hygiene, Fun, Comfort, The Voices) to send your Heathen to do something about it.
 - Spouses and roommates live in your home, wander around it and are saved with your game.
 
+## Economy
+
+- **Jobs** pay more per second the harder they are (easy ≈ $2/s, hard ≈ $3.4/s once you count recovery). Desk freelancing is a small side gig ($14–25).
+- **Bills** come every 2 minutes: rent (studio $80, warehouse $110, 2-bedroom $160), utilities that grow with your furniture, and groceries for everyone at home (plus baby costs). Roommates chip in. Missing 3 bills makes an unmarried roommate move out.
+- **Roommates** rest for 2 minutes after a shift before they can work again.
+
 ## Life & Relationships
 
 - **Dating app** — Match new people

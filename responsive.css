@@ -799,3 +799,10 @@ button.h-5.w-5.rounded-full::after { content: ""; position: absolute; inset: -6p
 @media (prefers-reduced-motion: reduce) { .creepy-row { animation: none; } }
 button[class*="-translate-x-1/2"][class*="-translate-y-full"][aria-label] { position: absolute; }
 button[class*="-translate-x-1/2"][class*="-translate-y-full"][aria-label]::after { content: ""; position: absolute; inset: -10px; }
+
+/* Bills breakdown in the Life tab */
+.deck-bill { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid rgba(255,255,255,.08); border-radius: 14px; background: rgba(255,255,255,.03); font-size: 12px; }
+.deck-bill > div { display: flex; justify-content: space-between; color: #c9c0ce; }
+.deck-bill b { color: #f4eef7; font-weight: 800; }
+.deck-bill-total { margin-top: 4px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,.1); color: #f4eef7 !important; font-weight: 800; }
+.deck-bill-total b { color: #ffd27a; font-size: 14px; }
