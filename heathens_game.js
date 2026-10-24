@@ -38433,14 +38433,9 @@ function Gf() {
   );
 }
 function Kf() {
-  try {
-    if (!window.AudioContext) return !1;
-    let e = new AudioContext(),
-      t = typeof e.createMediaStreamDestination == `function`;
-    return (e.close(), t);
-  } catch {
-    return !1;
-  }
+  // Feature-check on the prototype instead of creating (and closing) a throwaway AudioContext; iOS limits them.
+  let e = window.AudioContext || window.webkitAudioContext;
+  return !!e && typeof e.prototype.createMediaStreamDestination == `function`;
 }
 function qf(e = `video`, t = !1) {
   let n = document.createElement(e);
